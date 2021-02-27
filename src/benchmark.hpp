@@ -15,10 +15,6 @@
 #include "fifo.hpp"
 
 namespace benchmark {
-//	template <
-//		std::size_t fifo_size,
-//		std::size_t cache_line_size
-//	>
 	class latency_measurement_t {
 
 		fifo_t<char, 8, 64> fifo;
@@ -34,16 +30,12 @@ namespace benchmark {
 			long write_time_nano = 0;
 			long num_messages = 0;
 
-			writer_t(latency_measurement_t& latency_measurement) : latency_measurement(latency_measurement) {
-//				std::cout << "writer_t constructor called: this = " << this << std::endl;
-			}
+			writer_t(latency_measurement_t& latency_measurement) : latency_measurement(latency_measurement) {}
 			writer_t(const writer_t&) = delete;
 			writer_t(writer_t&&) = delete;
 
 			int operator()() {
 				pin_this_thread_to_core(latency_measurement.core_writer);
-//				std::cout << "In writer thread, &write_time_nano = " << &write_time_nano << " &num_messages = " << &num_messages << std::endl;
-//				std::cout << "In writer thread, num_tries=" << latency_measurement.num_tries << std::endl;
 				for (int i = 0; i < latency_measurement.num_tries; ++i) {
 					while (!latency_measurement.fifo.can_write()) {}
 					long t1 = get_thread_time_nano();
@@ -51,7 +43,6 @@ namespace benchmark {
 					write_time_nano += get_thread_time_nano() - t1;
 					++num_messages;
 				}
-//				std::cout << "Out of writer thread, num_messages=" << num_messages << ", total time=" << write_time_nano << std::endl;
 				return 0;
 			}
 
@@ -67,15 +58,11 @@ namespace benchmark {
 			long read_time_nano = 0;
 			long num_messages = 0;
 
-			reader_t(latency_measurement_t& latency_measurement) : latency_measurement(latency_measurement) {
-//				std::cout << "reader_t constructor called: this = " << this << std::endl;
-			}
+			reader_t(latency_measurement_t& latency_measurement) : latency_measurement(latency_measurement) {}
 			reader_t(const reader_t&) = delete;
 			reader_t(reader_t&&) = delete;
 
 			int operator()() {
-//				std::cout << "In reader thread, &read_time_nano = " << &read_time_nano << " &num_messages = " << &num_messages << std::endl;
-//				std::cout << "In reader thread, num_tries=" << latency_measurement.num_tries << std::endl;
 				pin_this_thread_to_core(latency_measurement.core_reader);
 				for (int i = 0; i < latency_measurement.num_tries; ++i) {
 					while (!latency_measurement.fifo.can_read()) {}
@@ -84,7 +71,6 @@ namespace benchmark {
 					read_time_nano += get_thread_time_nano() - t1;
 					++num_messages;
 				}
-//				std::cout << "Out of reader thread, num_messages=" << num_messages << ", total time=" << read_time_nano << std::endl;
 				return 0;
 			}
 

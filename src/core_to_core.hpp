@@ -41,13 +41,9 @@ namespace benchmark {
 			thread_1_t(thread_1_t&&) = delete;
 
 			int operator()() {
-//				std::cout << "START(1)" << std::endl;
 				latency_measurement_t::pin_this_thread_to_core(core_to_core.core_1);
-//				std::cout << "PINNED(1)" << std::endl;
 				long t1;
 				for (std::size_t i = 0; i < num_tries; ++i) {
-//					const bool do_log = (i%10000==0);
-//					if (do_log) std::cout << '.';
 					if constexpr (!avg) {
 						t1 = latency_measurement_t::get_thread_time_nano();
 					}
@@ -59,9 +55,6 @@ namespace benchmark {
 						core_to_core.thread_1_round_time_nano[i] = latency_measurement_t::get_thread_time_nano() - t1;
 					}
 				}
-				std::stringstream tmp;
-				tmp << " DONE(1) " << std::endl;
-				std::cout << tmp.str();
 				return 0;
 			}
 		};
@@ -75,14 +68,10 @@ namespace benchmark {
 			thread_2_t(thread_1_t&&) = delete;
 
 			int operator()() {
-//				std::cout << "START(2)" << std::endl;
 				latency_measurement_t::pin_this_thread_to_core(core_to_core.core_2);
-//				std::cout << "PINNED(2)" << std::endl;
 				long t1;
 				long start = latency_measurement_t::get_thread_time_nano();
 				for (std::size_t i = 0; i < num_tries; ++i) {
-//					const bool do_log = (i%10000==0);
-//					if (do_log) std::cout << '-';
 					if constexpr (!avg) {
 						t1 = latency_measurement_t::get_thread_time_nano();
 					}
@@ -94,11 +83,8 @@ namespace benchmark {
 						core_to_core.thread_2_round_time_nano[i] = latency_measurement_t::get_thread_time_nano() - t1;
 					}
 				}
-//				std::cout << "Out of thread_2" << std::endl;
 				long end = latency_measurement_t::get_thread_time_nano();
-				std::stringstream tmp;
-				tmp << " DONE(2) time=" << (end - start) << std::endl;
-				std::cout << tmp.str();
+				std::cout << end - start << " ns" << std::endl;
 				return 0;
 			}
 		};

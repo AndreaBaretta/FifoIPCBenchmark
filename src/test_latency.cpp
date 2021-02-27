@@ -21,7 +21,6 @@ using benchmark::latency_measurement_t;
 using benchmark::core_to_core_t;
 
 constexpr const int core_writer = 0;
-//constexpr const int core_reader = 8;
 constexpr const int num_tries = 1000000;
 
 int main() {
@@ -39,17 +38,6 @@ int main() {
 
 	for (int core = 1; core < 1; ++core) {
 		cout << "On core: " << core << endl;
-//		latency_measurement_t lm{core_writer, core, num_tries};
-//
-//		std::thread writer_thread([&]{lm.writer();});
-//		std::thread reader_thread([&]{lm.reader();});
-//
-//		writer_thread.join();
-//		reader_thread.join();
-//
-//		cout << "Write core: " << core_writer << " Reader core: " << core_reader << endl;
-//		cout << "Average write time: " << lm.writer.get_average_time()-avg_get_time_cost << " ns" << endl;
-//		cout << "Average read time:  " << lm.reader.get_average_time()-avg_get_time_cost << " ns" << endl;
 
 		core_to_core_t<num_tries, false> ctc{0, core};
 		std::thread thread_1([&]{ctc.thread_1();});
