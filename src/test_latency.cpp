@@ -20,10 +20,10 @@ using benchmark::fifo_t;
 using benchmark::latency_measurement_t;
 using benchmark::core_to_core_t;
 
-constexpr const int core_writer = 0;
-constexpr const int num_tries = 1000000;
 
-int main() {
+int main(int argc, char** argv) {
+	constexpr const int num_tries = 1000000;
+
 	cout << "Hello World!" << endl; // prints Hello World!
 
 	long t1 = latency_measurement_t::get_thread_time_nano();
@@ -36,41 +36,46 @@ int main() {
 
 	cout << "Average latency from get_time_nano: " << avg_get_time_cost << endl;
 
-	for (int core = 1; core < 1; ++core) {
-		cout << "On core: " << core << endl;
 
-		core_to_core_t<num_tries, false> ctc{0, core};
-		std::thread thread_1([&]{ctc.thread_1();});
-		std::thread thread_2([&]{ctc.thread_2();});
+//	for (int core = 1; core < 31; ++core) {
+//		cout << "On core: " << core << endl;
+//
+//		core_to_core_t<num_tries, false> ctc{0, core};
+//		std::thread thread_1([&]{ctc.thread_1();});
+//		std::thread thread_2([&]{ctc.thread_2();});
+//
+//		thread_1.join();
+//		thread_2.join();
+//
+//		cout << "Finished threads" << endl;
+//
+//		std::ofstream data;
+//
+//		std::string fileName = std::string("/home/andrea/Desktop/InfinityFabricData/InfinityFabricData_0_") + std::to_string(core) + std::string(".csv");
+//
+//		std::remove(fileName.c_str());
+//		data.open(fileName.c_str());
+//		data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
+//		for (int i = 0; i < num_tries; ++i) {
+//			data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
+//		}
+//		data.close();
+//	}
 
-		thread_1.join();
-		thread_2.join();
-
-		std::ofstream data;
-
-		std::string fileName = std::string("/home/andrea/Desktop/InfinityFabricData/InfinityFabricData_0_") + std::to_string(core) + std::string(".csv");
-
-		std::remove(fileName.c_str());
-		data.open(fileName.c_str());
-		data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
-		for (int i = 0; i < num_tries; ++i) {
-			data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
-		}
-		data.close();
-	}
-
-	for (int core = 1; core < 2; ++core) {
-		core_to_core_t<num_tries, true> ctc{0, 8};
+	for (int core = 1; core < 32; ++core) {
+		core_to_core_t<num_tries, true> ctc{0, core};
 
 //		cout << "Before creating thread" << endl;
-		long start = latency_measurement_t::get_thread_time_nano();
+//		long start = latency_measurement_t::get_thread_time_nano();
 		std::thread thread_1([&]{ctc.thread_1();});
 		std::thread thread_2([&]{ctc.thread_2();});
 //		cout << "Before calling join" << endl;
 //		cout << "Before join" << endl;
 		thread_1.join();
 		thread_2.join();
-		cout << "Overall time taken: " << latency_measurement_t::get_thread_time_nano() - start << " ns" << endl;
+
+//		cout << "Overall time taken: " << latency_measurement_t::get_thread_time_nano() - start << " ns" << endl;
+//		cout << "Finished avg!" << endl;
 	}
 //	double avgTime = static_cast<double>(latency_measurement_t::get_thread_time_nano()-start)/static_cast<double>(32*1000000);
 //	cout << "Average time per round trip: " << avgTime << endl;
@@ -78,3 +83,9 @@ int main() {
 	cout << "Done!" << endl;
 	return 0;
 }
+
+//int main(int, char**) {
+//	core_to_core_t<1000000, false> ctc{0, 1};
+//	std::cout << "Success! size = " << sizeof(ctc) << " sizeof(thread)=" << sizeof(decltype([&]{ctc.thread_1();})) << std::endl;
+//	unmain(0, nullptr);
+//}

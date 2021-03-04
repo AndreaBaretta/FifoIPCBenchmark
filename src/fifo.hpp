@@ -22,17 +22,17 @@ namespace benchmark {
 		struct aligned_message_type {
 			alignas(cache_line_size) message_type msg;
 
-			aligned_message_type& operator=(const message_type& msg) { this->msg = msg; return *this; }
-			aligned_message_type& operator=(message_type&& msg) { this->msg = std::forward<message_type>(msg); return *this; }
+			volatile aligned_message_type& operator=(const volatile message_type& msg) volatile { this->msg = msg; return *this; }
+			//aligned_message_type& operator=(volatile message_type&& msg) volatile { this->msg = std::forward<message_type>(msg); return *this; }
 
-			operator message_type() const { return msg; }
+			operator message_type() const volatile { return msg; }
 		};
 
-		using buffer_type = std::array<aligned_message_type, fifo_size>;
-		using size_type = typename buffer_type::size_type;
+		using buffer_type = std::array<volatile aligned_message_type, fifo_size>;
+		using size_type = std::size_t;
 
-		alignas(cache_line_size) size_type write_index = 0;
-		alignas(cache_line_size) size_type read_index = 0;
+		alignas(cache_line_size) volatile size_type write_index = 0;
+		alignas(cache_line_size) volatile size_type read_index = 0;
 
 		alignas(cache_line_size) buffer_type buffer;
 

@@ -43,13 +43,15 @@
                             							
                             <tool command="g++-10" id="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug.1766320020" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.exe.debug">
                                 								
-                                <option id="gnu.cpp.compiler.exe.debug.option.optimization.level.112874363" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
+                                <option id="gnu.cpp.compiler.exe.debug.option.optimization.level.112874363" name="Optimization Level" superClass="gnu.cpp.compiler.exe.debug.option.optimization.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.optimization.level.most" valueType="enumerated"/>
                                 								
                                 <option defaultValue="gnu.cpp.compiler.debugging.level.max" id="gnu.cpp.compiler.exe.debug.option.debugging.level.342634745" name="Debug Level" superClass="gnu.cpp.compiler.exe.debug.option.debugging.level" useByScannerDiscovery="false" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
                                 								
                                 <option id="gnu.cpp.compiler.option.dialect.std.1518130181" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.default" valueType="enumerated"/>
                                 								
                                 <option id="gnu.cpp.compiler.option.dialect.flags.218350524" name="Other dialect flags" superClass="gnu.cpp.compiler.option.dialect.flags" useByScannerDiscovery="true" value="-std=c++20" valueType="string"/>
+                                								
+                                <option id="gnu.cpp.compiler.option.optimization.flags.1577381810" name="Other optimization flags" superClass="gnu.cpp.compiler.option.optimization.flags" useByScannerDiscovery="false" value="-march=native" valueType="string"/>
                                 								
                                 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.632508592" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
                                 							
@@ -76,6 +78,8 @@
                                     <listOptionValue builtIn="false" value="pthread"/>
                                     								
                                 </option>
+                                								
+                                <option id="gnu.cpp.link.option.flags.1834784303" name="Linker flags" superClass="gnu.cpp.link.option.flags" useByScannerDiscovery="false" value="-O3 -march=native" valueType="string"/>
                                 								
                                 <inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.178483430" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
                                     									
