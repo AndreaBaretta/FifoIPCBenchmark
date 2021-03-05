@@ -10,33 +10,41 @@
 #include <cstddef>
 #include <array>
 #include <optional>
+#include <vector>
 
 namespace benchmark {
 
 	template <
-		typename message_type,
-		std::size_t fifo_size,
 		std::size_t cache_line_size
 	>
 	class fifo_t {
-		struct aligned_message_type {
-			alignas(cache_line_size) message_type msg;
+		using cache_line_type = std::array<long, cache_line_size/sizeof(long)>;
 
-			volatile aligned_message_type& operator=(const volatile message_type& msg) volatile { this->msg = msg; return *this; }
+		struct aligned_cache_line_type {
+			static_assert(sizeof(cache_line_type) == cache_line_size);
+
+			alignas(cache_line_size) cache_line_type cache_line;
+
+			volatile aligned_cache_line_type& operator=(const volatile cache_line_type & msg) volatile { this->msg = msg; return *this; }
 			//aligned_message_type& operator=(volatile message_type&& msg) volatile { this->msg = std::forward<message_type>(msg); return *this; }
 
-			operator message_type() const volatile { return msg; }
+			operator cache_line_type() const volatile { return cache_line; }
 		};
 
-		using buffer_type = std::array<volatile aligned_message_type, fifo_size>;
+		using buffer_type = std::vector<volatile aligned_cache_line_type>;
 		using size_type = std::size_t;
 
 		alignas(cache_line_size) volatile size_type write_index = 0;
 		alignas(cache_line_size) volatile size_type read_index = 0;
+		alignas(cache_line_size) buffer_type buffer{};
 
-		alignas(cache_line_size) buffer_type buffer;
+		const std::size_t fifo_size;
+		const std::size_t message_size;
 
 	public:
+
+		fifo_t(const std::size_t fifo_size, const std::size_t message_size):
+			write_index(0), read_index(0), buffer(fifo_size*message_size), fifo_size(fifo_size), message_size(message_size) {}
 
 		size_type num_messages_to_read() const {
 			const size_type result = write_index - read_index;
@@ -52,20 +60,30 @@ namespace benchmark {
 			return num_messages_to_read() != 0;
 		}
 
-		bool try_write_message(const message_type& msg) {
+		bool try_write_message(const std::vector<cache_line_type>& msg) {
+			assert(msg.size() == message_size);
 			if (!can_write()) {
 				return false;
 			}
-			buffer[write_index%fifo_size] = msg;
+			const std::size_t buffer_index = write_index*message_size;
+			for (int i = 0; i < message_size; ++i) {
+				buffer[(buffer_index + i)%fifo_size] = msg[i];
+			}
 			++write_index;
 			return true;
 		}
 
-		std::optional<message_type> try_read_message() {
+		std::optional<std::vector<cache_line_type>> try_read_message() {
 			if (!can_read()) {
 				return {};
 			}
-			return buffer[(read_index++)%fifo_size];
+			std::vector<cache_line_type> msg{message_size};
+			const std::size_t buffer_index = read_index*message_size;
+			for (int i = 0; i < message_size; ++i) {
+				msg[i] = buffer[(buffer_index + i)%fifo_size];
+			}
+			++read_index;
+			return msg;
 		}
 
 	};

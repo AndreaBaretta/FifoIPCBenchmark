@@ -18,124 +18,51 @@
 #include "fifo.hpp"
 
 namespace benchmark {
-	class latency_measurement_t {
-
-		fifo_t<char, 8, 64> fifo;
-
-	public:
-		const int core_writer;
-		const int core_reader;
-		const int num_tries;
-
-		class writer_t {
-			latency_measurement_t& latency_measurement;
-		public:
-			long write_time_nano = 0;
-			long num_messages = 0;
-
-			writer_t(latency_measurement_t& latency_measurement) : latency_measurement(latency_measurement) {}
-			writer_t(const writer_t&) = delete;
-			writer_t(writer_t&&) = delete;
-
-			int operator()() {
-				pin_this_thread_to_core(latency_measurement.core_writer);
-				for (int i = 0; i < latency_measurement.num_tries; ++i) {
-					while (!latency_measurement.fifo.can_write()) {}
-					long t1 = get_thread_time_nano();
-					latency_measurement.fifo.try_write_message('a');
-					write_time_nano += get_thread_time_nano() - t1;
-					++num_messages;
-				}
-				return 0;
-			}
-
-			double get_average_time() const {
-				return static_cast<double>(write_time_nano)/ static_cast<double>(num_messages);
-			}
-
-		};
-
-		class reader_t {
-			latency_measurement_t& latency_measurement;
-		public:
-			long read_time_nano = 0;
-			long num_messages = 0;
-
-			reader_t(latency_measurement_t& latency_measurement) : latency_measurement(latency_measurement) {}
-			reader_t(const reader_t&) = delete;
-			reader_t(reader_t&&) = delete;
-
-			int operator()() {
-				pin_this_thread_to_core(latency_measurement.core_reader);
-				for (int i = 0; i < latency_measurement.num_tries; ++i) {
-					while (!latency_measurement.fifo.can_read()) {}
-					long t1 = get_thread_time_nano();
-					latency_measurement.fifo.try_read_message();
-					read_time_nano += get_thread_time_nano() - t1;
-					++num_messages;
-				}
-				return 0;
-			}
-
-			double get_average_time() const {
-				return (static_cast<double>(read_time_nano))/ (static_cast<double>(num_messages));
-			}
-
-		};
-
-		writer_t writer;
-		reader_t reader;
-
-		latency_measurement_t(const int core_writer, const int core_reader, const int num_tries) :
-			fifo(), core_writer(core_writer), core_reader(core_reader), num_tries(num_tries), writer(*this), reader(*this) {}
-
-	public:
-		static long get_thread_time_nano() {
-			timespec time;
-			int res = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &time);
-			if (res == 0) {
-				return 1000000000*time.tv_sec + time.tv_nsec;
-			} else {
-				std::cout << "Well shit" << std::endl;
-				exit(1);
-			}
+	static long get_thread_time_nano() {
+		timespec time;
+		int res = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &time);
+		if (res == 0) {
+			return 1000000000*time.tv_sec + time.tv_nsec;
+		} else {
+			std::cout << "Well shit" << std::endl;
+			exit(1);
 		}
+	}
 
-		static int pin_this_thread_to_core(const int core_id) {
-			   int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
-			   if (core_id < 0 || core_id >= num_cores) {
-				   std::cerr << "pin_this_thread_to_core error - core_id:" << core_id << " num_cores: " << num_cores << std::endl;
-				   std::exit(1);
-			   }
+	static int pin_this_thread_to_core(const int core_id) {
+		   int num_cores = sysconf(_SC_NPROCESSORS_ONLN);
+		   if (core_id < 0 || core_id >= num_cores) {
+			   std::cerr << "pin_this_thread_to_core error - core_id:" << core_id << " num_cores: " << num_cores << std::endl;
+			   std::exit(1);
+		   }
 
-			   cpu_set_t cpuset;
-			   CPU_ZERO(&cpuset);
-			   CPU_SET(core_id, &cpuset);
+		   cpu_set_t cpuset;
+		   CPU_ZERO(&cpuset);
+		   CPU_SET(core_id, &cpuset);
 
-			   //pthread_t current_thread = pthread_self();
-			   auto this_thread = pthread_self();
-			   auto result = pthread_setaffinity_np(this_thread, sizeof(cpu_set_t), &cpuset);
-			   if (result != 0) {
-				   std::cout << "sched_setaffinity error: " << errno << std::endl;
-				   std::exit(1);
-			   }
-			   auto niceness = nice(-40);
+		   //pthread_t current_thread = pthread_self();
+		   auto this_thread = pthread_self();
+		   auto result = pthread_setaffinity_np(this_thread, sizeof(cpu_set_t), &cpuset);
+		   if (result != 0) {
+			   std::cout << "sched_setaffinity error: " << errno << std::endl;
+			   std::exit(1);
+		   }
+		   auto niceness = nice(-40);
 
-			   unsigned int cpu;
-			   unsigned int node;
-			   result = getcpu(&cpu, &node);
+		   unsigned int cpu;
+		   unsigned int node;
+		   result = getcpu(&cpu, &node);
 //			   std::cout << "Running on cpu: " << cpu << " node: " << node << " niceness: " << niceness << std::endl;
 
-			   sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
-			   if (CPU_COUNT(&cpuset) != 1 || !CPU_ISSET(core_id, &cpuset)) {
-				   std::cout << "cpuset error: count == " << CPU_COUNT(&cpuset) << std::endl;
-			   }
+		   sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
+		   if (CPU_COUNT(&cpuset) != 1 || !CPU_ISSET(core_id, &cpuset)) {
+			   std::cout << "cpuset error: count == " << CPU_COUNT(&cpuset) << std::endl;
+		   }
 
-			   sched_param param;
-			   param.sched_priority = 99;
-			   sched_setscheduler(0, SCHED_FIFO, &param);
-			   return result;
-		}
+		   sched_param param;
+		   param.sched_priority = 99;
+		   sched_setscheduler(0, SCHED_FIFO, &param);
+		   return result;
+	}
 
-	};
 }

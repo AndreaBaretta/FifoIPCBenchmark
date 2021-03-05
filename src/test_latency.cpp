@@ -13,24 +13,35 @@
 #include "fifo.hpp"
 #include "benchmark.hpp"
 #include "core_to_core.hpp"
+#include "cxxopts.hpp"
 
 using std::cout;
 using std::endl;
 using benchmark::fifo_t;
-using benchmark::latency_measurement_t;
 using benchmark::core_to_core_t;
 
 
 int main(int argc, char** argv) {
+
+	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another");
+	options.add_options()
+			("n,numtries", "Number of iterations of the test", cxxopts::value<int>()->default_value("1000000"))
+			;
+
+	auto result = options.parse(argc, argv);
+
+	cout << "Command line option: " << result["numtries"].as<int>() << endl;
+
 	constexpr const int num_tries = 1000000;
+	const int size_msg = 3;
 
 	cout << "Hello World!" << endl; // prints Hello World!
 
-	long t1 = latency_measurement_t::get_thread_time_nano();
+	long t1 = benchmark::get_thread_time_nano();
 	for (int i = 1; i < num_tries-1; ++i) {
-		latency_measurement_t::get_thread_time_nano();
+		benchmark::get_thread_time_nano();
 	}
-	long t2 = latency_measurement_t::get_thread_time_nano();
+	long t2 = benchmark::get_thread_time_nano();
 
 	double avg_get_time_cost = (static_cast<double>(t2)-static_cast<double>(t1))/num_tries;
 
@@ -40,7 +51,7 @@ int main(int argc, char** argv) {
 //	for (int core = 1; core < 31; ++core) {
 //		cout << "On core: " << core << endl;
 //
-//		core_to_core_t<num_tries, false> ctc{0, core};
+//		core_to_core_t<64, false> ctc{0, core};
 //		std::thread thread_1([&]{ctc.thread_1();});
 //		std::thread thread_2([&]{ctc.thread_2();});
 //
@@ -63,7 +74,7 @@ int main(int argc, char** argv) {
 //	}
 
 	for (int core = 1; core < 32; ++core) {
-		core_to_core_t<num_tries, true> ctc{0, core};
+		core_to_core_t<64, true> ctc{0, core, num_tries};
 
 //		cout << "Before creating thread" << endl;
 //		long start = latency_measurement_t::get_thread_time_nano();
