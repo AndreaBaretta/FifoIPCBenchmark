@@ -14,8 +14,6 @@
 
 namespace benchmark {
 
-	using benchmark::fifo_t;
-
 	template <
 		std::size_t cache_line_size,
 		bool avg
@@ -30,8 +28,14 @@ namespace benchmark {
 		const int core_2;
 		const int num_tries;
 
+		const std::size_t fifo_size;
+		const std::size_t message_size;
+
 		std::vector<int> thread_1_round_time_nano;
 		std::vector<int> thread_2_round_time_nano;
+
+		using cache_line_type = fifo_t<cache_line_size>::cache_line_type;
+		using aligned_cache_line_type = fifo_t<cache_line_size>::aligned_cache_line_type;
 
 		class thread_1_t {
 			core_to_core_t& core_to_core;
@@ -43,7 +47,7 @@ namespace benchmark {
 
 			int operator()() {
 				benchmark::pin_this_thread_to_core(core_to_core.core_1);
-				const std::vector<std::array<long, 8>> msg{fifo_1.message_type};
+				const std::vector<aligned_cache_line_type> msg{core_to_core.message_size};
 
 				for (std::size_t i = 0; i < core_to_core.num_tries; ++i) {
 					while (!core_to_core.fifo_1.try_write_message(msg)) {}
@@ -78,7 +82,7 @@ namespace benchmark {
 
 			int operator()() {
 				benchmark::pin_this_thread_to_core(core_to_core.core_2);
-				const std::vector<std::array<long, 8>> msg{fifo_1.message_type};
+				const std::vector<aligned_cache_line_type> msg{core_to_core.message_size};
 				for (std::size_t i = 0; i < (avg ? 2*core_to_core.num_tries : core_to_core.num_tries); ++i) {
 					while (!core_to_core.fifo_1.try_read_message().has_value()) {}
 					while (!core_to_core.fifo_2.try_write_message(msg)) {}
@@ -101,7 +105,7 @@ namespace benchmark {
 		thread_2_t thread_2;
 
 		core_to_core_t(const int core_1, const int core_2, const int num_tries, const std::size_t fifo_size, const std::size_t message_size) :
-			core_1(core_1), core_2(core_2), num_tries(num_tries), thread_1_round_time_nano(num_tries), thread_2_round_time_nano(num_tries),
-			fifo_1(fifo_size, message_size), fifo_2(fifo_size, message_size), thread_1(*this), thread_2(*this) {}
+			core_1(core_1), core_2(core_2), num_tries(num_tries), fifo_size(fifo_size), message_size(message_size), thread_1_round_time_nano(num_tries),
+			thread_2_round_time_nano(num_tries), fifo_1(fifo_size, message_size), fifo_2(fifo_size, message_size), thread_1(*this), thread_2(*this) {}
 	};
 }
