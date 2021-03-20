@@ -23,15 +23,17 @@
 #endif
 
 namespace benchmark {
-	void copy_data_256(void* dst, const void* src, size_t size) {
-		assert(size % 32 == 0);
-		while(size) {
-			_mm256_store_si256 ((__m256i*)dst, _mm256_load_si256((__m256i const*)src));
-			src += 32;
-			dst += 32;
-			size -= 32;
-		}
-	}
+//#ifdef NDEBUG
+//	void copy_data_256(void* dst, const void* src, size_t size) {
+//		assert(size % 32 == 0);
+//		while(size) {
+//			_mm256_store_si256 ((__m256i*)dst, _mm256_load_si256((__m256i const*)src));
+//			src += 32;
+//			dst += 32;
+//			size -= 32;
+//		}
+//	}
+//#endif
 
 	template <
 		std::size_t cache_line_size = 64
@@ -40,12 +42,15 @@ namespace benchmark {
 	public:
 		static_assert(cache_line_size == 64);
 		constexpr static const std::size_t longs_per_cache_line = cache_line_size/sizeof(long);
-		using cache_line_type = long[longs_per_cache_line];
+		using cache_line_type = std::array<long, longs_per_cache_line>;
 
 		struct aligned_cache_line_type {
 			static_assert(sizeof(cache_line_type) == cache_line_size);
 
 			alignas(cache_line_size) cache_line_type cache_line;
+			const long& operator[](const std::size_t i) const { return cache_line[i]; }
+			long& operator[](const std::size_t i) { return cache_line[i]; }
+			bool operator==(const aligned_cache_line_type& rhs) const { return cache_line == rhs.cache_line; }
 
 #ifdef USE_VOLATILE
 			aligned_cache_line_type& operator=(const aligned_cache_line_type&) = delete;
@@ -71,8 +76,8 @@ namespace benchmark {
 		using buffer_type = VOLATILE aligned_cache_line_type;
 		using size_type = std::size_t;
 	protected:
-		alignas(cache_line_size) VOLATILE size_type write_index = 0;
-		alignas(cache_line_size) VOLATILE size_type read_index = 0;
+		alignas(cache_line_size) volatile size_type write_index = 0;
+		alignas(cache_line_size) volatile size_type read_index = 0;
 
 		/*
 		 * int * foo;
@@ -104,7 +109,9 @@ namespace benchmark {
 
 		bool try_write_message(const std::vector<aligned_cache_line_type>& msg) {
 			assert(msg.size() == message_size);
+//			std::cout << "In try_write_message, can_write: " << can_write() << ", write index: " << write_index << ", read index: " << read_index << std::endl;
 			if (!can_write()) {
+				std::cout << "I give up" << std::endl;
 				return false;
 			}
 			const std::size_t buffer_index = write_index*message_size;

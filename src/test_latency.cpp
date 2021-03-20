@@ -15,6 +15,13 @@
 #include "core_to_core.hpp"
 #include "cxxopts.hpp"
 
+
+#ifdef NDEBUG
+constexpr const bool test_mode = false;
+#else
+constexpr const bool test_mode = true;
+#endif
+
 using std::cout;
 using std::endl;
 using benchmark::fifo_t;
@@ -22,6 +29,7 @@ using benchmark::core_to_core_t;
 
 
 int main(int argc, char** argv) {
+	cout << "test_mode: " << test_mode << endl;
 
 	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another");
 	options.add_options()
@@ -35,7 +43,7 @@ int main(int argc, char** argv) {
 	constexpr const int num_tries = 1000000;
 	const int size_msg = 3;
 
-	cout << "Hello World! sizeof(long) =" << sizeof(long) << endl; // prints Hello World!
+	cout << "test_mode =" << test_mode << " sizeof(long) =" << sizeof(long) << endl; // prints Hello World!
 
 	long t1 = benchmark::get_thread_time_nano();
 	for (int i = 1; i < num_tries-1; ++i) {
@@ -75,7 +83,7 @@ int main(int argc, char** argv) {
 
 	for (int core = 1; core < 32; ++core) {
 		std::cout << "Beginning core " << core << std::endl;
-		core_to_core_t<64, true> ctc{0, core, num_tries, 8, 1};
+		core_to_core_t<64, true, test_mode> ctc{0, core, num_tries, 8, 1};
 
 //		cout << "Before creating thread" << endl;
 //		long start = latency_measurement_t::get_thread_time_nano();
