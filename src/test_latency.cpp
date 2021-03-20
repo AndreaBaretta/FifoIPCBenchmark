@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
 	cout << "Command line option: " << result["numtries"].as<int>() << endl;
 
 	constexpr const int num_tries = 1000000;
-	const int size_msg = 3;
+//	const int size_msg = 3;
 
 	cout << "test_mode =" << test_mode << " sizeof(long) =" << sizeof(long) << endl; // prints Hello World!
 

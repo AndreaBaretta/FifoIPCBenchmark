@@ -115,10 +115,10 @@ namespace benchmark {
 				return false;
 			}
 			const std::size_t buffer_index = write_index*message_size;
-			for (int i = 0; i < message_size; ++i) {
+			for (std::size_t i = 0; i < message_size; ++i) {
 				buffer[(buffer_index + i)%fifo_size] = msg[i];
 			}
-			++write_index;
+			write_index = write_index + 1;
 			return true;
 		}
 
@@ -128,10 +128,10 @@ namespace benchmark {
 			}
 			std::vector<aligned_cache_line_type> msg{message_size};
 			const std::size_t buffer_index = read_index*message_size;
-			for (int i = 0; i < message_size; ++i) {
+			for (std::size_t i = 0; i < message_size; ++i) {
 				msg[i] = buffer[(buffer_index + i)%fifo_size];
 			}
-			++read_index;
+			read_index = read_index + 1;
 			return msg;
 		}
 

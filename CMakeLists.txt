@@ -18,6 +18,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
 	target_compile_options(fifo-ipc-latency PUBLIC -march=native)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+
 target_include_directories(fifo-ipc-latency PUBLIC
    src/
 )

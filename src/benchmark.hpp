@@ -12,7 +12,8 @@
 #include <errno.h>
 #include <time.h>
 #include "/usr/src/linux-hwe-5.8-headers-5.8.0-44/include/linux/getcpu.h"
-
+//#include <sys/time.h>
+//#include <sys/resource.h>
 #include <cstdlib>
 
 #include "fifo.hpp"
@@ -47,7 +48,9 @@ namespace benchmark {
 			   std::cout << "sched_setaffinity error: " << errno << std::endl;
 			   std::exit(1);
 		   }
-		   auto niceness = nice(-40);
+
+		   auto niceness = nice(-20);
+		   std::cout << "Effective niceness: " << niceness << std::endl;
 
 		   unsigned int cpu;
 		   unsigned int node;
