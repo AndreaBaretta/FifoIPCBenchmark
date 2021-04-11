@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 
 	for (int core = 1; core < 32; ++core) {
 //		std::cout << "Beginning core " << core << std::endl;
-		core_to_core_t<64, false, test_mode, use_memcpy, use_avx256> ctc{0, core, num_tries, 8, 1};
+		core_to_core_t<64, test_mode, use_memcpy, use_avx256> ctc{0, core, num_tries, 8, 1, !individual_message};
 
 //		cout << "Before creating thread" << endl;
 //		long start = latency_measurement_t::get_thread_time_nano();
