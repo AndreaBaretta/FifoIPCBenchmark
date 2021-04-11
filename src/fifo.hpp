@@ -25,7 +25,7 @@ namespace benchmark {
 	>
 	class fifo_t {
 	public:
-		static_assert(cache_line_size == 64);
+//		static_assert(cache_line_size == 64);
 		constexpr static const std::size_t longs_per_cache_line = cache_line_size/sizeof(long);
 		using cache_line_type = std::array<long, longs_per_cache_line>;
 

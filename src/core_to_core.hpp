@@ -92,6 +92,8 @@ namespace benchmark {
 
 					for (std::size_t i = 0; i < core_to_core.num_tries; ++i) {
 
+						msg_sent[0][0] = i;
+
 						while (!core_to_core.fifo_1.try_write_message(msg_sent)) {}
 						while (!core_to_core.fifo_2.try_read_message(msg_read)) {}
 

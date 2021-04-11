@@ -34,7 +34,7 @@ for x in range(0,size_core_1): #core_1
             table[y][x] = 0
             zeros += 1
         else:
-            table[y][x] = time_nano[size_core_1*(x) + y - zeros]/6
+            table[y][x] = time_nano[size_core_1*(x) + y - zeros]/2
 
 fig, ax = plt.subplots()
 im = ax.imshow(table, cmap = 'Reds')
