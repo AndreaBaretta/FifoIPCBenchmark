@@ -20,6 +20,8 @@
 #include <string>
 #include <filesystem>
 
+#include <assert.h>
+
 #include "fifo.hpp"
 #include "benchmark.hpp"
 #include "core_to_core.hpp"
@@ -44,14 +46,16 @@ using std::cout;
 using std::endl;
 using benchmark::fifo_t;
 using benchmark::core_to_core_t;
-
+using namespace std::string_literals;
 
 int main(int argc, char** argv) {
 	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another over a shared memory FIFO");
 	options.add_options()
 			("n,numtries", "Number of iterations of the test", cxxopts::value<int>()->default_value("1000000"))
 			("i,individual-message", "Save latency data on individual messages")
-			("d,data-dir", "Directory for data on individual messages. Useless without -i. If not specified, uses present working directory", cxxopts::value<std::string>()->default_value(std::string("")))
+			("d,data-dir", "Directory for gathered data. If used with -i, it will save latency data on individual messages. If not specified, uses present working directory", cxxopts::value<std::string>()->default_value(std::string("")))
+			("cores", "If not specified, tests all cores communicating with each other. If one value is specified, then that is fixed as the reference core. If two values are specified, only those two cores are tested",
+					cxxopts::value<std::vector<std::size_t>>()->default_value(""))
 			("h,help", "Print usage")
 			;
 
@@ -68,8 +72,23 @@ int main(int argc, char** argv) {
 	const int num_tries = result["numtries"].as<int>();
 	const int individual_message = result["individual-message"].as<bool>();
 	std::string usr_data_dir = result["data-dir"].as<std::string>();
+	const std::vector<std::size_t> specified_cores = result["cores"].as<std::vector<std::size_t>>();
 
-	cout << "Command line option: Tries=" << num_tries << "  Individual message=" << individual_message << "  User data directory=" << usr_data_dir << endl;
+	cout << "specified_cores: ";
+	for (std::size_t i = 0; i < specified_cores.size(); ++i) { cout << specified_cores[i] << ", "; }
+	cout << endl;
+
+	if (specified_cores.size() > 2) {
+		cout << "More than 2 cores specified" << endl;
+		exit(0);
+	} else if (specified_cores.size() == 2) {
+		if (specified_cores[0] == specified_cores[1]) {
+			cout << "Same core specified twice" << endl;
+			exit(0);
+		}
+	}
+
+//	cout << "Command line option: Tries=" << num_tries << "  Individual message=" << individual_message << "  User data directory=" << usr_data_dir << endl;
 	if (usr_data_dir.empty()) { cout << "PWD as data dir" << endl; }
 
 //	const int size_msg = 3;
@@ -88,47 +107,75 @@ int main(int argc, char** argv) {
 
 	cout << "Average latency from get_time_nano: " << avg_get_time_cost << "dummy size: " << dummy.size() << endl;
 
-	std::filesystem::path data_dir;
-	if (individual_message) {
-		data_dir =
+	std::filesystem::path data_dir =
 			usr_data_dir.empty()
 			? std::filesystem::current_path() / "data"
 			: std::filesystem::path(std::string(usr_data_dir));
-		std::filesystem::create_directory(data_dir);
-		cout << "Data directory=" << data_dir.string() << endl;
+	std::filesystem::create_directory(data_dir);
+	cout << "Data directory=" << data_dir.string() << endl;
+
+	std::vector<std::string> avg_round_time_nano{};
+	avg_round_time_nano.push_back("thread_1_core,thread_2_core,avg_round_time_nano\n"s);
+
+	for (int core_1 = specified_cores.size() > 0 ? specified_cores[0] : 0; core_1 < 32; ++core_1) {
+		for (int core_2 = specified_cores.size() > 1 ? specified_cores[1] : 0; core_2 < 32; ++core_2) {
+			if (core_1 == core_2) {
+				continue;
+			}
+			cout << "Core 1: " << core_1 << "  core 2: " << core_2 << endl;
+	//		std::cout << "Beginning core " << core << std::endl;
+			core_to_core_t<64, test_mode, use_memcpy, use_avx256> ctc{core_1, core_2, num_tries, 8, 1, !individual_message};
+
+	//		cout << "Before creating thread" << endl;
+	//		long start = latency_measurement_t::get_thread_time_nano();
+			std::thread thread_1([&]{ctc.thread_1();});
+			std::thread thread_2([&]{ctc.thread_2();});
+	//		cout << "Before calling join" << endl;
+	//		cout << "Before join" << endl;
+			thread_1.join();
+			thread_2.join();
+
+			if (individual_message) {
+				std::ofstream data;
+				std::filesystem::path fileName = data_dir / (std::string("FifoIpcLatency_") + std::to_string(core_1) + std::string("_") + std::to_string(core_2) + std::string(".csv"));
+				cout << "fileName: " << fileName << endl;
+
+	//			std::remove(fileName.c_str());
+				data.open(fileName, std::ios_base::trunc);
+				data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
+				for (int i = 0; i < num_tries; ++i) {
+					data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
+				}
+				data.close();
+			} else {
+	//			std::string temp = std::string("");// + 0 + ","s + core + ","s + ctc.thread_1.avg_latency;
+				std::string temp = std::to_string(core_1) + ","s + std::to_string(core_2) + ","s + std::to_string(ctc.thread_1.avg_latency) + "\n"s;
+	//			temp += std::to_string(core&) + ","s;
+				cout << "temp: " << temp << endl;
+				avg_round_time_nano.push_back(temp);
+			}
+
+			cout << "Avg round time latency: " << ctc.thread_1.avg_latency << endl;
+	//		cout << "Overall time taken: " << latency_measurement_t::get_thread_time_nano() - start << " ns" << endl;
+	//		cout << "Finished avg!" << endl;
+			if (specified_cores.size() == 2) {
+				break;
+			}
+		}
+		if (specified_cores.size() >= 1) {
+			break;
+		}
 	}
 
-
-	for (int core = 1; core < 32; ++core) {
-//		std::cout << "Beginning core " << core << std::endl;
-		core_to_core_t<64, test_mode, use_memcpy, use_avx256> ctc{0, core, num_tries, 8, 1, !individual_message};
-
-//		cout << "Before creating thread" << endl;
-//		long start = latency_measurement_t::get_thread_time_nano();
-		std::thread thread_1([&]{ctc.thread_1();});
-		std::thread thread_2([&]{ctc.thread_2();});
-//		cout << "Before calling join" << endl;
-//		cout << "Before join" << endl;
-		thread_1.join();
-		thread_2.join();
-
-		if (individual_message) {
-			std::ofstream data;
-
-			std::filesystem::path fileName = data_dir / (std::string("FifoIpcLatency_0_") + std::to_string(core) + std::string(".csv"));
-			cout << "fileName: " << fileName << endl;
-
-//			std::remove(fileName.c_str());
-			data.open(fileName, std::ios_base::trunc);
-			data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
-			for (int i = 0; i < num_tries; ++i) {
-				data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
-			}
-			data.close();
+	if (!individual_message) {
+		std::ofstream data;
+		std::filesystem::path fileName = data_dir / std::string("FifoIpcLatency_avg.csv");
+		cout << "fileName: " << fileName << endl;
+		data.open(fileName, std::ios_base::trunc);
+		for (std::size_t i = 0; i < avg_round_time_nano.size(); ++i) {
+			data << avg_round_time_nano[i];
 		}
-
-//		cout << "Overall time taken: " << latency_measurement_t::get_thread_time_nano() - start << " ns" << endl;
-//		cout << "Finished avg!" << endl;
+		data.close();
 	}
 //	double avgTime = static_cast<double>(latency_measurement_t::get_thread_time_nano()-start)/static_cast<double>(32*1000000);
 //	cout << "Average time per round trip: " << avgTime << endl;

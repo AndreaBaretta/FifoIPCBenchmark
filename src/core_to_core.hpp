@@ -45,7 +45,9 @@ namespace benchmark {
 		class thread_1_t {
 			core_to_core_t& core_to_core;
 		public:
-			thread_1_t(core_to_core_t& core_to_core) : core_to_core(core_to_core) {
+			long avg_latency;
+
+			thread_1_t(core_to_core_t& core_to_core) : core_to_core(core_to_core), avg_latency(0) {
 			};
 			thread_1_t(const thread_1_t&) = delete;
 			thread_1_t(thread_1_t&&) = delete;
@@ -56,7 +58,6 @@ namespace benchmark {
 				std::vector<aligned_cache_line_type> msg_read{core_to_core.message_size};
 
 				long t1;
-				long start = benchmark::get_thread_time_nano();
 
 				if (!core_to_core.avg) {
 
@@ -87,6 +88,8 @@ namespace benchmark {
 						core_to_core.thread_1_round_time_nano[i] = benchmark::get_thread_time_nano() - t1;
 					}
 				} else {
+					long start = benchmark::get_thread_time_nano();
+
 					for (std::size_t i = 0; i < core_to_core.num_tries; ++i) {
 
 						while (!core_to_core.fifo_1.try_write_message(msg_sent)) {}
@@ -110,14 +113,13 @@ namespace benchmark {
 							}
 						}
 					}
+					long end = benchmark::get_thread_time_nano();
+					avg_latency = (end - start)/static_cast<long>(core_to_core.num_tries);
+					const auto cache_to_cache = avg_latency / 6;
+					std::cout << "Thread 2 core: " << core_to_core.core_2 << " end: " << end << "  start: " << start << "  avg: " << avg_latency << " cache_to_cache: " << cache_to_cache << " ns" << std::endl;
+					std::cout.flush();
 				}
 
-
-				long end = benchmark::get_thread_time_nano();
-				const auto latency = (end - start)/static_cast<long>(core_to_core.num_tries);
-				const auto cache_to_cache = latency / 6;
-				std::cout << "Thread 2 core: " << core_to_core.core_2 << " end: " << end << "  start: " << start << "  avg: " << latency << " cache_to_cache: " << cache_to_cache << " ns" << std::endl;
-				std::cout.flush();
 				return 0;
 			}
 		};
