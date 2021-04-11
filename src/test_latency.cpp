@@ -17,7 +17,8 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include <string.h>
+#include <string>
+#include <filesystem>
 
 #include "fifo.hpp"
 #include "benchmark.hpp"
@@ -46,44 +47,57 @@ using benchmark::core_to_core_t;
 
 
 int main(int argc, char** argv) {
-	cout << "test_mode: " << test_mode << endl;
-	cout << "use_avx256: " << use_avx256 << endl;
-
-	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another");
+	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another over a shared memory FIFO");
 	options.add_options()
 			("n,numtries", "Number of iterations of the test", cxxopts::value<int>()->default_value("1000000"))
 			("i,individual-message", "Save latency data on individual messages")
+			("d,data-dir", "Directory for data on individual messages. Useless without -i. If not specified, uses present working directory", cxxopts::value<std::string>()->default_value(std::string("")))
+			("h,help", "Print usage")
 			;
 
 	auto result = options.parse(argc, argv);
 
-	cout << "Command line option: Tries=" << result["numtries"].as<int>() << "  Individual message=" << result["individual-message"].as<bool>() << endl;
+    if (result.count("help")) {
+    	std::cout << options.help() << std::endl;
+        exit(0);
+    }
+
+	cout << "test_mode: " << test_mode << endl;
+	cout << "use_avx256: " << use_avx256 << endl;
 
 	const int num_tries = result["numtries"].as<int>();
 	const int individual_message = result["individual-message"].as<bool>();
+	std::string usr_data_dir = result["data-dir"].as<std::string>();
+
+	cout << "Command line option: Tries=" << num_tries << "  Individual message=" << individual_message << "  User data directory=" << usr_data_dir << endl;
+	if (usr_data_dir.empty()) { cout << "PWD as data dir" << endl; }
+
 //	const int size_msg = 3;
 
 	cout << "test_mode =" << test_mode << " sizeof(long) =" << sizeof(long) << endl; // prints Hello World!
 
+	std::vector<long> dummy(num_tries);
+
 	long t1 = benchmark::get_thread_time_nano();
-	for (int i = 1; i < num_tries-1; ++i) {
-		benchmark::get_thread_time_nano();
+	for (int i = 0; i < num_tries-1; ++i) {
+		dummy[i] = benchmark::get_thread_time_nano() - t1;
 	}
 	long t2 = benchmark::get_thread_time_nano();
 
 	double avg_get_time_cost = (static_cast<double>(t2)-static_cast<double>(t1))/num_tries;
 
-	cout << "Average latency from get_time_nano: " << avg_get_time_cost << endl;
+	cout << "Average latency from get_time_nano: " << avg_get_time_cost << "dummy size: " << dummy.size() << endl;
 
-	char dataDir[PATH_MAX];
+	std::filesystem::path data_dir;
 	if (individual_message) {
-		char cwd[PATH_MAX];
-		cout << "Present directory: " << getcwd(cwd, sizeof(cwd)) << endl;
-		strcpy(dataDir, cwd);
-		strcat(dataDir, "/../../FifoIPCLatencyData");
-		cout << "Data dir: " << dataDir << endl;
-		mkdir(dataDir, S_IROTH | S_IWOTH | S_IXOTH);
+		data_dir =
+			usr_data_dir.empty()
+			? std::filesystem::current_path() / "data"
+			: std::filesystem::path(std::string(usr_data_dir));
+		std::filesystem::create_directory(data_dir);
+		cout << "Data directory=" << data_dir.string() << endl;
 	}
+
 
 	for (int core = 1; core < 32; ++core) {
 //		std::cout << "Beginning core " << core << std::endl;
@@ -101,11 +115,11 @@ int main(int argc, char** argv) {
 		if (individual_message) {
 			std::ofstream data;
 
-			std::string fileName = std::string(dataDir) + std::string("/FifoIpcLatency_0_") + std::to_string(core) + std::string(".csv");
+			std::filesystem::path fileName = data_dir / (std::string("FifoIpcLatency_0_") + std::to_string(core) + std::string(".csv"));
 			cout << "fileName: " << fileName << endl;
 
-			std::remove(fileName.c_str());
-			data.open(fileName.c_str());
+//			std::remove(fileName.c_str());
+			data.open(fileName, std::ios_base::trunc);
 			data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
 			for (int i = 0; i < num_tries; ++i) {
 				data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";

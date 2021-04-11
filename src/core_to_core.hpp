@@ -36,8 +36,8 @@ namespace benchmark {
 
 		const bool avg;
 
-		std::vector<int> thread_1_round_time_nano;
-		std::vector<int> thread_2_round_time_nano;
+		std::vector<long> thread_1_round_time_nano;
+		std::vector<long> thread_2_round_time_nano;
 
 		using cache_line_type = fifo_t<cache_line_size, use_memcpy, use_avx256>::cache_line_type;
 		using aligned_cache_line_type = fifo_t<cache_line_size, use_memcpy, use_avx256>::aligned_cache_line_type;

@@ -68,11 +68,7 @@ namespace benchmark {
 		}
 
 		bool try_write_message(const std::vector<aligned_cache_line_type>& msg) {
-//			assert(msg.size() == message_size);
-//			std::cout << "In try_write_message, can_write: " << can_write() << ", write index: " << write_index << ", read index: " << read_index << std::endl;
-
 			if (!can_write()) {
-//				std::cout << "I give up" << std::endl;
 				return false;
 			}
 
@@ -81,11 +77,6 @@ namespace benchmark {
 				std::memcpy(&buffer[buffer_index%fifo_size], msg.data(), message_size*cache_line_size);
 			} else if constexpr (use_avx256) {
 				benchmark::copy_data_256<cache_line_size>(&buffer[buffer_index%fifo_size], msg.data(), message_size);
-			} else {
-//				static_assert(use_memcpy || use_avx256);
-				for (std::size_t i = 0; i < message_size; ++i) {
-					buffer[(buffer_index + i)%fifo_size] = msg[i];
-				}
 			}
 			write_index = write_index + 1;
 			return true;
@@ -100,10 +91,6 @@ namespace benchmark {
 				std::memcpy(msg.data(), &buffer[buffer_index%fifo_size], message_size*cache_line_size);
 			} else if constexpr (use_avx256) {
 				benchmark::copy_data_256<cache_line_size>(msg.data(), &buffer[buffer_index%fifo_size], message_size);
-			} else {
-				for (std::size_t i = 0; i < message_size; ++i) {
-					msg[i] = buffer[(buffer_index + i)%fifo_size];
-				}
 			}
 			read_index = read_index + 1;
 			return true;
