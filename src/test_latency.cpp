@@ -52,13 +52,15 @@ int main(int argc, char** argv) {
 	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another");
 	options.add_options()
 			("n,numtries", "Number of iterations of the test", cxxopts::value<int>()->default_value("1000000"))
+			("i,individual-message", "Save latency data on individual messages")
 			;
 
 	auto result = options.parse(argc, argv);
 
-	cout << "Command line option: " << result["numtries"].as<int>() << endl;
+	cout << "Command line option: Tries=" << result["numtries"].as<int>() << "  Individual message=" << result["individual-message"].as<bool>() << endl;
 
 	const int num_tries = result["numtries"].as<int>();
+	const int individual_message = result["individual-message"].as<bool>();
 //	const int size_msg = 3;
 
 	cout << "test_mode =" << test_mode << " sizeof(long) =" << sizeof(long) << endl; // prints Hello World!
@@ -73,40 +75,15 @@ int main(int argc, char** argv) {
 
 	cout << "Average latency from get_time_nano: " << avg_get_time_cost << endl;
 
-
-	char cwd[PATH_MAX];
-	cout << "Present directory: " << getcwd(cwd, sizeof(cwd)) << endl;
-
-//	for (int core = 1; core < 31; ++core) {
-//		cout << "On core: " << core << endl;
-//
-//		core_to_core_t<64, false> ctc{0, core};
-//		std::thread thread_1([&]{ctc.thread_1();});
-//		std::thread thread_2([&]{ctc.thread_2();});
-//
-//		thread_1.join();
-//		thread_2.join();
-//
-//		cout << "Finished threads" << endl;
-//
-//		std::ofstream data;
-//
-//		std::string fileName = std::string("/home/andrea/Desktop/InfinityFabricData/InfinityFabricData_0_") + std::to_string(core) + std::string(".csv");
-//
-//		std::remove(fileName.c_str());
-//		data.open(fileName.c_str());
-//		data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
-//		for (int i = 0; i < num_tries; ++i) {
-//			data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
-//		}
-//		data.close();
-//	}
-
 	char dataDir[PATH_MAX];
-	strcpy(dataDir, cwd);
-	strcat(dataDir, "/../../FifoIPCLatencyData");
-	cout << "Data dir: " << dataDir << endl;
-	mkdir(dataDir, S_IROTH | S_IWOTH | S_IXOTH);
+	if (individual_message) {
+		char cwd[PATH_MAX];
+		cout << "Present directory: " << getcwd(cwd, sizeof(cwd)) << endl;
+		strcpy(dataDir, cwd);
+		strcat(dataDir, "/../../FifoIPCLatencyData");
+		cout << "Data dir: " << dataDir << endl;
+		mkdir(dataDir, S_IROTH | S_IWOTH | S_IXOTH);
+	}
 
 	for (int core = 1; core < 32; ++core) {
 //		std::cout << "Beginning core " << core << std::endl;
@@ -121,19 +98,20 @@ int main(int argc, char** argv) {
 		thread_1.join();
 		thread_2.join();
 
-		std::ofstream data;
+		if (individual_message) {
+			std::ofstream data;
 
-		std::string fileName = std::string(dataDir) + std::string("/FifoIpcLatency_0_") + std::to_string(core) + std::string(".csv");
-		cout << "fileName: " << fileName << endl;
+			std::string fileName = std::string(dataDir) + std::string("/FifoIpcLatency_0_") + std::to_string(core) + std::string(".csv");
+			cout << "fileName: " << fileName << endl;
 
-		std::remove(fileName.c_str());
-		data.open(fileName.c_str());
-		data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
-		for (int i = 0; i < num_tries; ++i) {
-			data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
+			std::remove(fileName.c_str());
+			data.open(fileName.c_str());
+			data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
+			for (int i = 0; i < num_tries; ++i) {
+				data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
+			}
+			data.close();
 		}
-		data.close();
-
 
 //		cout << "Overall time taken: " << latency_measurement_t::get_thread_time_nano() - start << " ns" << endl;
 //		cout << "Finished avg!" << endl;
