@@ -56,6 +56,9 @@ int main(int argc, char** argv) {
 			("d,data-dir", "Directory for gathered data. If used with -i, it will save latency data on individual messages. If not specified, uses present working directory", cxxopts::value<std::string>()->default_value(std::string("")))
 			("cores", "If not specified, tests all cores communicating with each other. If one value is specified, then that is fixed as the reference core. If two values are specified, only those two cores are tested",
 					cxxopts::value<std::vector<std::size_t>>()->default_value(""))
+			("b,buffer-size", "Size of the buffer in the shared FIFO in number of messages", cxxopts::value<std::size_t>()->default_value("8"))
+			("m,message-size", "Size of the message sent to FIFO in number of cache lines", cxxopts::value<std::size_t>()->default_value("1"))
+//			("c,cache-line-size", "Number of bits along which the messages are aligned in memory", cxxopts::value<std::size_t>()->default_value("64"))
 			("h,help", "Print usage")
 			;
 
@@ -73,6 +76,11 @@ int main(int argc, char** argv) {
 	const int individual_message = result["individual-message"].as<bool>();
 	std::string usr_data_dir = result["data-dir"].as<std::string>();
 	const std::vector<std::size_t> specified_cores = result["cores"].as<std::vector<std::size_t>>();
+	const std::size_t buffer_size = result["buffer-size"].as<std::size_t>();
+	const std::size_t message_size = result["message-size"].as<std::size_t>();
+
+	cout << "Buffer size: " << buffer_size << endl;
+	cout << "Message size: " << message_size << endl;
 
 	cout << "specified_cores: ";
 	for (std::size_t i = 0; i < specified_cores.size(); ++i) { cout << specified_cores[i] << ", "; }
@@ -124,7 +132,7 @@ int main(int argc, char** argv) {
 			}
 			cout << "Core 1: " << core_1 << "  core 2: " << core_2 << endl;
 	//		std::cout << "Beginning core " << core << std::endl;
-			core_to_core_t<64, test_mode, use_memcpy, use_avx256> ctc{core_1, core_2, num_tries, 8, 1, !individual_message};
+			core_to_core_t<64, test_mode, use_memcpy, use_avx256> ctc{core_1, core_2, num_tries, buffer_size, message_size, !individual_message};
 
 	//		cout << "Before creating thread" << endl;
 	//		long start = latency_measurement_t::get_thread_time_nano();
