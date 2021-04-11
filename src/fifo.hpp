@@ -16,29 +16,7 @@
 
 #include "memcpy.hpp"
 
-#define USE_VOLATILE
-
-#ifdef USE_VOLATILE
-#  define VOLATILE volatile
-#else
-#  define VOLATILE
-#endif
-
-#define STRINGIFY2(x) #x
-#define STRINGIFY(x) STRINGIFY2(x)
-
 namespace benchmark {
-//#ifdef NDEBUG
-//	void copy_data_256(void* dst, const void* src, size_t size) {
-//		assert(size % 32 == 0);
-//		while(size) {
-//			_mm256_store_si256 ((__m256i*)dst, _mm256_load_si256((__m256i const*)src));
-//			src += 32;
-//			dst += 32;
-//			size -= 32;
-//		}
-//	}
-//#endif
 
 	template <
 		std::size_t cache_line_size,
@@ -58,22 +36,13 @@ namespace benchmark {
 			const long& operator[](const std::size_t i) const { return cache_line[i]; }
 			long& operator[](const std::size_t i) { return cache_line[i]; }
 			bool operator==(const aligned_cache_line_type& rhs) const { return cache_line == rhs.cache_line; }
-
-			//aligned_message_type& operator=(VOLATILE message_type&& msg) VOLATILE { this->msg = std::forward<message_type>(msg); return *this; }
-
-			//operator cache_line_type() const VOLATILE { return cache_line; }
 		};
 
 		using buffer_type = aligned_cache_line_type;
 		using size_type = std::size_t;
 	protected:
-		alignas(cache_line_size) VOLATILE size_type write_index = 0;
-		alignas(cache_line_size) VOLATILE size_type read_index = 0;
-
-		/*
-		 * int * foo;
-		 * foo = new int [5];
-		 */
+		alignas(cache_line_size) volatile size_type write_index = 0;
+		alignas(cache_line_size) volatile size_type read_index = 0;
 		alignas(cache_line_size) buffer_type *buffer;
 
 		const std::size_t fifo_size;
@@ -82,9 +51,7 @@ namespace benchmark {
 	public:
 
 		fifo_t(const std::size_t fifo_size, const std::size_t message_size):
-			write_index(0), read_index(0), buffer(new buffer_type[fifo_size * message_size]), fifo_size(fifo_size), message_size(message_size) {
-			std::cout << "Volatile: " << STRINGIFY(VOLATILE) << std::endl;
-		}
+			write_index(0), read_index(0), buffer(new buffer_type[fifo_size * message_size]), fifo_size(fifo_size), message_size(message_size) {}
 
 		size_type num_messages_to_read() const {
 			const size_type result = write_index - read_index;
@@ -115,10 +82,10 @@ namespace benchmark {
 			} else if constexpr (use_avx256) {
 				benchmark::copy_data_256<cache_line_size>(&buffer[buffer_index%fifo_size], msg.data(), message_size);
 			} else {
-				static_assert(use_memcpy || use_avx256);
-//				for (std::size_t i = 0; i < message_size; ++i) {
-//					buffer[(buffer_index + i)%fifo_size] = msg[i];
-//				}
+//				static_assert(use_memcpy || use_avx256);
+				for (std::size_t i = 0; i < message_size; ++i) {
+					buffer[(buffer_index + i)%fifo_size] = msg[i];
+				}
 			}
 			write_index = write_index + 1;
 			return true;

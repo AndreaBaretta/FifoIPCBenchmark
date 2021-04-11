@@ -83,7 +83,7 @@ namespace benchmark {
 						}
 					}
 
-					static_assert(avg);
+//					static_assert(avg);
 					if constexpr (!avg) {
 						core_to_core.thread_1_round_time_nano[i] = benchmark::get_thread_time_nano() - t1;
 					}
@@ -93,7 +93,7 @@ namespace benchmark {
 				long end = benchmark::get_thread_time_nano();
 				const auto latency = (end - start)/static_cast<long>(core_to_core.num_tries);
 				const auto cache_to_cache = latency / 6;
-				std::cout << "Thread 1 core: " << core_to_core.core_2 << " end: " << end << "  start: " << start << "  avg: " << latency << " cache_to_cache: " << cache_to_cache << " ns" << std::endl;
+				std::cout << "Thread 2 core: " << core_to_core.core_2 << " end: " << end << "  start: " << start << "  avg: " << latency << " cache_to_cache: " << cache_to_cache << " ns" << std::endl;
 				std::cout.flush();
 				return 0;
 			}
@@ -108,7 +108,6 @@ namespace benchmark {
 
 			int operator()() {
 				benchmark::pin_this_thread_to_core(core_to_core.core_2);
-//				std::vector<aligned_cache_line_type> msg{core_to_core.message_size};
 				std::vector<aligned_cache_line_type> msg_read{core_to_core.message_size};
 
 				std::cout << "Thread 2: starting for-loop" << std::endl;

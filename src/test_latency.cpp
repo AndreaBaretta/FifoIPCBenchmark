@@ -10,6 +10,15 @@
 #include <fstream>
 #include <thread>
 #include <stdio.h>
+
+#include <unistd.h>
+#include <limits.h>
+
+#include <sys/stat.h>
+#include <sys/types.h>
+
+#include <string.h>
+
 #include "fifo.hpp"
 #include "benchmark.hpp"
 #include "core_to_core.hpp"
@@ -49,7 +58,7 @@ int main(int argc, char** argv) {
 
 	cout << "Command line option: " << result["numtries"].as<int>() << endl;
 
-	constexpr const int num_tries = 2000000;
+	const int num_tries = result["numtries"].as<int>();
 //	const int size_msg = 3;
 
 	cout << "test_mode =" << test_mode << " sizeof(long) =" << sizeof(long) << endl; // prints Hello World!
@@ -64,6 +73,9 @@ int main(int argc, char** argv) {
 
 	cout << "Average latency from get_time_nano: " << avg_get_time_cost << endl;
 
+
+	char cwd[PATH_MAX];
+	cout << "Present directory: " << getcwd(cwd, sizeof(cwd)) << endl;
 
 //	for (int core = 1; core < 31; ++core) {
 //		cout << "On core: " << core << endl;
@@ -90,9 +102,15 @@ int main(int argc, char** argv) {
 //		data.close();
 //	}
 
+	char dataDir[PATH_MAX];
+	strcpy(dataDir, cwd);
+	strcat(dataDir, "/../../FifoIPCLatencyData");
+	cout << "Data dir: " << dataDir << endl;
+	mkdir(dataDir, S_IROTH | S_IWOTH | S_IXOTH);
+
 	for (int core = 1; core < 32; ++core) {
 //		std::cout << "Beginning core " << core << std::endl;
-		core_to_core_t<64, true, test_mode, use_memcpy, use_avx256> ctc{0, core, num_tries, 8, 1};
+		core_to_core_t<64, false, test_mode, use_memcpy, use_avx256> ctc{0, core, num_tries, 8, 1};
 
 //		cout << "Before creating thread" << endl;
 //		long start = latency_measurement_t::get_thread_time_nano();
@@ -102,6 +120,20 @@ int main(int argc, char** argv) {
 //		cout << "Before join" << endl;
 		thread_1.join();
 		thread_2.join();
+
+		std::ofstream data;
+
+		std::string fileName = std::string(dataDir) + std::string("/FifoIpcLatency_0_") + std::to_string(core) + std::string(".csv");
+		cout << "fileName: " << fileName << endl;
+
+		std::remove(fileName.c_str());
+		data.open(fileName.c_str());
+		data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
+		for (int i = 0; i < num_tries; ++i) {
+			data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
+		}
+		data.close();
+
 
 //		cout << "Overall time taken: " << latency_measurement_t::get_thread_time_nano() - start << " ns" << endl;
 //		cout << "Finished avg!" << endl;
