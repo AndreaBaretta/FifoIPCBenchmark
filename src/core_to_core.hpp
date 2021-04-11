@@ -54,15 +54,6 @@ namespace benchmark {
 				std::vector<aligned_cache_line_type> msg_sent{core_to_core.message_size};
 				std::vector<aligned_cache_line_type> msg_read{core_to_core.message_size};
 
-
-//				std::cerr << "warmup" << std::endl;
-//				for (std::size_t i = 0; i < core_to_core.num_tries; ++i) {
-//					while (!core_to_core.fifo_1.try_write_message(msg_sent)) {}
-//					while (!core_to_core.fifo_2.try_read_message(msg_read)) {}
-//				}
-//
-//				std::cout << "Past warmup" << std::endl;
-
 				long t1;
 				long start = benchmark::get_thread_time_nano();
 
@@ -71,36 +62,8 @@ namespace benchmark {
 					if constexpr (!avg) {
 						t1 = benchmark::get_thread_time_nano();
 					}
-//					if (i%1000 == 0) {
-//						std::cout << i/1000%10;
-//						std::cout.flush();
-//					}
-//					if ((core_to_core.num_tries - i) < 100) {
-//						std::cout << '.' << (i%10);
-//						std::cout.flush();
-//					}
-
-					//Creates the message
-//					for (std::size_t x = 0; x < core_to_core.message_size; ++x) {
-//						aligned_cache_line_type& cache_line = msg_sent[x];
-//						cache_line[0] = -(i+1);
-//					}
-
-//					std::cout << "Generated message" << std::endl;
-//					for (const auto& aligned_cache_line : msg_sent) {
-//						for (const long v : aligned_cache_line.cache_line) std::cout << v << ", ";
-//					}
-//					std::cout << std::endl;
-//					std::cout << "At iteration i = " << i << std::endl;
-//					if constexpr (!avg) {
-//						t1 = benchmark::get_thread_time_nano();
-//					}
 					while (!core_to_core.fifo_1.try_write_message(msg_sent)) {}
 					while (!core_to_core.fifo_2.try_read_message(msg_read)) {}
-
-//					msg_read.value()[0][0] = 22;
-
-//					std::cout << "Received message back " << std::endl;
 
 					if constexpr (test_mode) {
 //						std::cout << "In test mode" << std::endl;
@@ -148,28 +111,19 @@ namespace benchmark {
 //				std::vector<aligned_cache_line_type> msg{core_to_core.message_size};
 				std::vector<aligned_cache_line_type> msg_read{core_to_core.message_size};
 
-//				for (std::size_t i = 0; i < core_to_core.num_tries; ++i) {
-//					while (!core_to_core.fifo_1.try_read_message(msg_read)) {}
-//					while (!core_to_core.fifo_2.try_write_message(msg_read)) {}
-//				}
-
 				std::cout << "Thread 2: starting for-loop" << std::endl;
 				long t1;
 
 				for (std::size_t i = 0; i < core_to_core.num_tries; ++i) {
-//					t1 = benchmark::get_thread_time_nano();
-//						while (!core_to_core.fifo_1.try_read_message().has_value()) {}
-
+					if constexpr (!avg) {
+						t1 = benchmark::get_thread_time_nano();
+					}
 					while (!core_to_core.fifo_1.try_read_message(msg_read)) {}
-
-//					std::cout << "Got message" << std::endl;
-//						std::cout << "Received in thread 2: ";
-//						for (const auto& aligned_cache_line : msg_read.value()) {
-//							for (const long v : aligned_cache_line.cache_line) std::cout << v << ", ";
-//						}
-//						std::cout << std::endl;
 					while (!core_to_core.fifo_2.try_write_message(msg_read)) {}
-//					core_to_core.thread_2_round_time_nano[i] = benchmark::get_thread_time_nano() - t1;
+
+					if constexpr (!avg) {
+						core_to_core.thread_2_round_time_nano[i] = benchmark::get_thread_time_nano() - t1;
+					}
 				}
 
 				std::cout << "Thread 2, over" << std::endl;
