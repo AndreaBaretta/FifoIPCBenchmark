@@ -22,6 +22,14 @@ constexpr const bool test_mode = false;
 constexpr const bool test_mode = true;
 #endif
 
+#ifdef NATIVE
+constexpr const bool use_avx256 = true;
+#else
+constexpr const bool use_avx256 = false;
+#endif
+
+constexpr const bool use_memcpy = !use_avx256;
+
 using std::cout;
 using std::endl;
 using benchmark::fifo_t;
@@ -30,6 +38,7 @@ using benchmark::core_to_core_t;
 
 int main(int argc, char** argv) {
 	cout << "test_mode: " << test_mode << endl;
+	cout << "use_avx256: " << use_avx256 << endl;
 
 	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another");
 	options.add_options()
@@ -40,7 +49,7 @@ int main(int argc, char** argv) {
 
 	cout << "Command line option: " << result["numtries"].as<int>() << endl;
 
-	constexpr const int num_tries = 1000000;
+	constexpr const int num_tries = 2000000;
 //	const int size_msg = 3;
 
 	cout << "test_mode =" << test_mode << " sizeof(long) =" << sizeof(long) << endl; // prints Hello World!
@@ -82,8 +91,8 @@ int main(int argc, char** argv) {
 //	}
 
 	for (int core = 1; core < 32; ++core) {
-		std::cout << "Beginning core " << core << std::endl;
-		core_to_core_t<64, true, test_mode> ctc{0, core, num_tries, 8, 1};
+//		std::cout << "Beginning core " << core << std::endl;
+		core_to_core_t<64, true, test_mode, use_memcpy, use_avx256> ctc{0, core, num_tries, 8, 1};
 
 //		cout << "Before creating thread" << endl;
 //		long start = latency_measurement_t::get_thread_time_nano();

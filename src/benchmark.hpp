@@ -11,7 +11,8 @@
 #include <pthread.h>
 #include <errno.h>
 #include <time.h>
-#include "/usr/src/linux-hwe-5.8-headers-5.8.0-44/include/linux/getcpu.h"
+//#include "/usr/src/linux-hwe-5.8-headers-5.8.0-44/include/linux/getcpu.h"
+//#include <linux/getcpu.h>
 //#include <sys/time.h>
 //#include <sys/resource.h>
 #include <cstdlib>
@@ -52,19 +53,21 @@ namespace benchmark {
 		   auto niceness = nice(-20);
 		   std::cout << "Effective niceness: " << niceness << std::endl;
 
-		   unsigned int cpu;
-		   unsigned int node;
-		   result = getcpu(&cpu, &node);
-//			   std::cout << "Running on cpu: " << cpu << " node: " << node << " niceness: " << niceness << std::endl;
+//		   unsigned int cpu;
+//		   unsigned int node;
+//		   result = getcpu(&cpu, &node);
+
+		   const auto cpu = sched_getcpu();
+		   std::cout << "Running on cpu: " << cpu << " niceness: " << niceness << std::endl;
 
 		   sched_getaffinity(0, sizeof(cpu_set_t), &cpuset);
 		   if (CPU_COUNT(&cpuset) != 1 || !CPU_ISSET(core_id, &cpuset)) {
 			   std::cout << "cpuset error: count == " << CPU_COUNT(&cpuset) << std::endl;
 		   }
 
-		   sched_param param;
-		   param.sched_priority = 99;
-		   sched_setscheduler(0, SCHED_FIFO, &param);
+//		   sched_param param;
+//		   param.sched_priority = 99;
+//		   sched_setscheduler(0, SCHED_FIFO, &param);
 		   return result;
 	}
 

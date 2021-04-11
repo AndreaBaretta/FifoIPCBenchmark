@@ -11,16 +11,21 @@
 #include <array>
 #include <optional>
 #include <vector>
-
+#include <cstring>
 #include <x86intrin.h>
 
-//#define USE_VOLATILE
+#include "memcpy.hpp"
+
+#define USE_VOLATILE
 
 #ifdef USE_VOLATILE
 #  define VOLATILE volatile
 #else
 #  define VOLATILE
 #endif
+
+#define STRINGIFY2(x) #x
+#define STRINGIFY(x) STRINGIFY2(x)
 
 namespace benchmark {
 //#ifdef NDEBUG
@@ -36,7 +41,9 @@ namespace benchmark {
 //#endif
 
 	template <
-		std::size_t cache_line_size = 64
+		std::size_t cache_line_size,
+		bool use_memcpy,
+		bool use_avx256
 	>
 	class fifo_t {
 	public:
@@ -52,32 +59,16 @@ namespace benchmark {
 			long& operator[](const std::size_t i) { return cache_line[i]; }
 			bool operator==(const aligned_cache_line_type& rhs) const { return cache_line == rhs.cache_line; }
 
-#ifdef USE_VOLATILE
-			aligned_cache_line_type& operator=(const aligned_cache_line_type&) = delete;
-			aligned_cache_line_type& operator=(aligned_cache_line_type&&) = delete;
-			VOLATILE aligned_cache_line_type& operator=(const aligned_cache_line_type& aligned_cache_line) VOLATILE {
-				for (std::size_t i = 0; i<longs_per_cache_line; ++i) {
-					this->cache_line[i] = aligned_cache_line.cache_line[i];
-				}
-				return *this;
-			}
-			aligned_cache_line_type& operator=(VOLATILE aligned_cache_line_type& aligned_cache_line) {
-				for (std::size_t i = 0; i<longs_per_cache_line; ++i) {
-					this->cache_line[i] = aligned_cache_line.cache_line[i];
-				}
-				return *this;
-			}
-#endif
 			//aligned_message_type& operator=(VOLATILE message_type&& msg) VOLATILE { this->msg = std::forward<message_type>(msg); return *this; }
 
 			//operator cache_line_type() const VOLATILE { return cache_line; }
 		};
 
-		using buffer_type = VOLATILE aligned_cache_line_type;
+		using buffer_type = aligned_cache_line_type;
 		using size_type = std::size_t;
 	protected:
-		alignas(cache_line_size) volatile size_type write_index = 0;
-		alignas(cache_line_size) volatile size_type read_index = 0;
+		alignas(cache_line_size) VOLATILE size_type write_index = 0;
+		alignas(cache_line_size) VOLATILE size_type read_index = 0;
 
 		/*
 		 * int * foo;
@@ -91,7 +82,9 @@ namespace benchmark {
 	public:
 
 		fifo_t(const std::size_t fifo_size, const std::size_t message_size):
-			write_index(0), read_index(0), buffer(new buffer_type[fifo_size * message_size]), fifo_size(fifo_size), message_size(message_size) {}
+			write_index(0), read_index(0), buffer(new buffer_type[fifo_size * message_size]), fifo_size(fifo_size), message_size(message_size) {
+			std::cout << "Volatile: " << STRINGIFY(VOLATILE) << std::endl;
+		}
 
 		size_type num_messages_to_read() const {
 			const size_type result = write_index - read_index;
@@ -108,31 +101,45 @@ namespace benchmark {
 		}
 
 		bool try_write_message(const std::vector<aligned_cache_line_type>& msg) {
-			assert(msg.size() == message_size);
+//			assert(msg.size() == message_size);
 //			std::cout << "In try_write_message, can_write: " << can_write() << ", write index: " << write_index << ", read index: " << read_index << std::endl;
+
 			if (!can_write()) {
-				std::cout << "I give up" << std::endl;
+//				std::cout << "I give up" << std::endl;
 				return false;
 			}
+
 			const std::size_t buffer_index = write_index*message_size;
-			for (std::size_t i = 0; i < message_size; ++i) {
-				buffer[(buffer_index + i)%fifo_size] = msg[i];
+			if constexpr (use_memcpy) {
+				std::memcpy(&buffer[buffer_index%fifo_size], msg.data(), message_size*cache_line_size);
+			} else if constexpr (use_avx256) {
+				benchmark::copy_data_256<cache_line_size>(&buffer[buffer_index%fifo_size], msg.data(), message_size);
+			} else {
+				static_assert(use_memcpy || use_avx256);
+//				for (std::size_t i = 0; i < message_size; ++i) {
+//					buffer[(buffer_index + i)%fifo_size] = msg[i];
+//				}
 			}
 			write_index = write_index + 1;
 			return true;
 		}
 
-		std::optional<std::vector<aligned_cache_line_type>> try_read_message() {
+		bool try_read_message(std::vector<aligned_cache_line_type>& msg) {
 			if (!can_read()) {
-				return {};
+				return false;
 			}
-			std::vector<aligned_cache_line_type> msg{message_size};
 			const std::size_t buffer_index = read_index*message_size;
-			for (std::size_t i = 0; i < message_size; ++i) {
-				msg[i] = buffer[(buffer_index + i)%fifo_size];
+			if constexpr (use_memcpy) {
+				std::memcpy(msg.data(), &buffer[buffer_index%fifo_size], message_size*cache_line_size);
+			} else if constexpr (use_avx256) {
+				benchmark::copy_data_256<cache_line_size>(msg.data(), &buffer[buffer_index%fifo_size], message_size);
+			} else {
+				for (std::size_t i = 0; i < message_size; ++i) {
+					msg[i] = buffer[(buffer_index + i)%fifo_size];
+				}
 			}
 			read_index = read_index + 1;
-			return msg;
+			return true;
 		}
 
 	};
