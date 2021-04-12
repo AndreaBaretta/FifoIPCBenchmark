@@ -31,7 +31,7 @@ for x in range(0,size_core_1): #core_1
     for y in range(0,size_core_2): #core_2
         # print("x=" + str(x) + "  y=" + str(y) + "  i=" + str(size_core_1*(x) + y))
         if (y == x):
-            table[y][x] = 0
+            # table[y][x] = 0
             zeros += 1
         else:
             table[y][x] = time_nano[size_core_1*(x) + y - zeros]/2
@@ -48,7 +48,7 @@ ax.set_yticklabels(y_axis)
 for i in range(len(y_axis)):
     for j in range(len(x_axis)):
         text = ax.text(j, i, int(table[i, j]),
-                       ha="center", va="center", color="w")
+            ha="center", va="center", color="w")
 
 fig.colorbar(im, ticks=[np.max(table), np.min(table)])
 

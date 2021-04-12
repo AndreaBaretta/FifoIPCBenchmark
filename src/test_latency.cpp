@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
 					cxxopts::value<std::vector<std::size_t>>()->default_value(""))
 			("b,buffer-size", "Size of the buffer in the shared FIFO in number of messages", cxxopts::value<std::size_t>()->default_value("8"))
 			("m,message-size", "Size of the message sent to FIFO in number of cache lines", cxxopts::value<std::size_t>()->default_value("1"))
+			("no-save", "If used, gathered data is not stored and does not override any previously gathered data. This is largely for development purposes so I don't kill my SSD")
 //			("c,cache-line-size", "Number of bits along which the messages are aligned in memory", cxxopts::value<std::size_t>()->default_value("64"))
 			("h,help", "Print usage")
 			;
@@ -78,6 +79,7 @@ int main(int argc, char** argv) {
 	const std::vector<std::size_t> specified_cores = result["cores"].as<std::vector<std::size_t>>();
 	const std::size_t buffer_size = result["buffer-size"].as<std::size_t>();
 	const std::size_t message_size = result["message-size"].as<std::size_t>();
+	const bool save = !result["no-save"].as<bool>();
 
 	cout << "Buffer size: " << buffer_size << endl;
 	cout << "Message size: " << message_size << endl;
@@ -143,7 +145,7 @@ int main(int argc, char** argv) {
 			thread_1.join();
 			thread_2.join();
 
-			if (individual_message) {
+			if (individual_message && save) {
 				std::ofstream data;
 				std::filesystem::path fileName = data_dir / (std::string("FifoIpcLatency_") + std::to_string(core_1) + std::string("_") + std::to_string(core_2) + std::string(".csv"));
 				cout << "fileName: " << fileName << endl;
@@ -155,7 +157,8 @@ int main(int argc, char** argv) {
 					data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
 				}
 				data.close();
-			} else {
+				cout << "Saved data -i" << endl;
+			} else if (save) {
 	//			std::string temp = std::string("");// + 0 + ","s + core + ","s + ctc.thread_1.avg_latency;
 				std::string temp = std::to_string(core_1) + ","s + std::to_string(core_2) + ","s + std::to_string(ctc.thread_1.avg_latency) + "\n"s;
 	//			temp += std::to_string(core&) + ","s;
@@ -175,7 +178,7 @@ int main(int argc, char** argv) {
 		}
 	}
 
-	if (!individual_message) {
+	if (!individual_message && save) {
 		std::ofstream data;
 		std::filesystem::path fileName = data_dir / std::string("FifoIpcLatency_avg.csv");
 		cout << "fileName: " << fileName << endl;
@@ -184,6 +187,7 @@ int main(int argc, char** argv) {
 			data << avg_round_time_nano[i];
 		}
 		data.close();
+		cout << "Saved data avg" << endl;
 	}
 //	double avgTime = static_cast<double>(latency_measurement_t::get_thread_time_nano()-start)/static_cast<double>(32*1000000);
 //	cout << "Average time per round trip: " << avgTime << endl;
