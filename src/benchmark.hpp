@@ -11,10 +11,6 @@
 #include <pthread.h>
 #include <errno.h>
 #include <time.h>
-//#include "/usr/src/linux-hwe-5.8-headers-5.8.0-44/include/linux/getcpu.h"
-//#include <linux/getcpu.h>
-//#include <sys/time.h>
-//#include <sys/resource.h>
 #include <cstdlib>
 
 #include "fifo.hpp"
@@ -42,7 +38,6 @@ namespace benchmark {
 		   CPU_ZERO(&cpuset);
 		   CPU_SET(core_id, &cpuset);
 
-		   //pthread_t current_thread = pthread_self();
 		   auto this_thread = pthread_self();
 		   auto result = pthread_setaffinity_np(this_thread, sizeof(cpu_set_t), &cpuset);
 		   if (result != 0) {
@@ -51,11 +46,6 @@ namespace benchmark {
 		   }
 
 		   auto niceness = nice(-20);
-		   std::cout << "Effective niceness: " << niceness << std::endl;
-
-//		   unsigned int cpu;
-//		   unsigned int node;
-//		   result = getcpu(&cpu, &node);
 
 		   const auto cpu = sched_getcpu();
 		   std::cout << "Running on cpu: " << cpu << " niceness: " << niceness << std::endl;
