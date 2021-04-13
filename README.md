@@ -39,7 +39,7 @@ sudo ./fifo-ipc-latency
 sudo apt-get install g++-10
 ```
 
-The c++ standard used for compuilation is c++20.
+The c++ standard used for compilation is c++20.
 
 Once you have compiled the benchmark as previously described and have the exeutable, it can take several command-line arguments:
 
