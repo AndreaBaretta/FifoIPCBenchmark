@@ -67,6 +67,10 @@ namespace benchmark {
 		fifo_t(const std::size_t fifo_size, const std::size_t message_size):
 			write_index(0), read_index(0), buffer(new buffer_type[fifo_size * message_size]), fifo_size(fifo_size), message_size(message_size) {}
 
+		~fifo_t() {
+			delete[] buffer;
+		}
+
 		size_type num_messages_to_read() const {
 			const size_type result = write_index - read_index;
 			assert(result <= fifo_size);

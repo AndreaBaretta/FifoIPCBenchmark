@@ -91,7 +91,7 @@ Please note that this script will look for the data, by default, in `/builds/rel
 
 Contributions are appreciated, but please keep in mind that this benchmark specifically measures the latency of communication using shared memory FIFOs.
 
-Just open an issues or send a pull request.
+Just open an issue or send a pull request.
 
 <!-- ## [License](http://goldsborough.mit-license.org) -->
 ## License
