@@ -1,10 +1,23 @@
-//============================================================================
-// Name        : test_latency.cpp
-// Author      : 
-// Version     :
-// Copyright   :
-// Description : Measure the latency of Infinity Fabric
-//============================================================================
+/*
+
+Copyright © 2021 Andrea Baretta
+
+This file is part of FifoIPCLatency.
+
+FifoIPCLatency is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+FifoIPCLatency is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with FifoIPCLatency.  If not, see <https://www.gnu.org/licenses/>.
+
+*/
 
 #include <iostream>
 #include <fstream>
@@ -54,7 +67,7 @@ int main(int argc, char** argv) {
 					cxxopts::value<std::vector<std::size_t>>()->default_value(""))
 			("b,buffer-size", "Size of the buffer in the shared FIFO in number of messages", cxxopts::value<std::size_t>()->default_value("8"))
 			("m,message-size", "Size of the message sent to FIFO in number of cache lines", cxxopts::value<std::size_t>()->default_value("1"))
-			("no-save", "If used, gathered data is not stored and does not override any previously gathered data. This is largely for development purposes so I don't kill my SSD")
+			("no-save", "If used, gathered data is not stored and does not override any previously gathered data. This is largely for development purposes so you don't kill your SSD")
 //			("c,cache-line-size", "Number of bits along which messages are aligned in memory", cxxopts::value<std::size_t>()->default_value("64"))
 			("h,help", "Print usage")
 			;

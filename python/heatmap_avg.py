@@ -1,11 +1,35 @@
+# Copyright © 2021 Andrea Baretta
+
+# This file is part of FifoIPCLatency.
+
+# FifoIPCLatency is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# FifoIPCLatency is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with FifoIPCLatency.  If not, see <https://www.gnu.org/licenses/>.
+
 import numpy as np
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import sys
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-df = pd.read_csv(dir_path + "/../builds/release/data/FifoIpcLatency_avg.csv")
+df = []
+if len(sys.argv) == 1:
+    print("Using default directory")
+    df = pd.read_csv(dir_path + "/../builds/release/data/FifoIpcLatency_avg.csv")
+else:
+    print("Used specified directory: " + sys.argv[1])
+    df = pd.read_csv(sys.argv[1])
 
 # print(df.to_string())
 
