@@ -25,7 +25,7 @@ import sys
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-cores = [0,8]
+cores = [0,6]
 
 df = []
 f = []
@@ -36,8 +36,8 @@ if len(sys.argv) == 1:
     f = open(dir_path + "/../builds/release/data/sysinfo.txt", "r").read()
 else:
     print("Used specified directory: " + sys.argv[1])
-    df = pd.read_csv(sys.argv[1] + "/FifoIpcLatency_" + cores[0] + "_" + cores[1] + ".csv")
-    f = open(dir_path + "/sysinfo.txt", "r").read()
+    df = pd.read_csv(sys.argv[1] + "/FifoIpcLatency_" + str(cores[0]) + "_" + str(cores[1]) + ".csv")
+    f = open(sys.argv[1] + "/sysinfo.txt", "r").read()
 
 name = f.split("\n")[13][33:]
 
