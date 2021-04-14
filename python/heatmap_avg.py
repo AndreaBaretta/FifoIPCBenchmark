@@ -32,7 +32,7 @@ if len(sys.argv) == 1:
 else:
     print("Used specified directory: " + sys.argv[1])
     df = pd.read_csv(sys.argv[1] + "/FifoIpcLatency_avg.csv")
-    f = open(dir_path + "/sysinfo.txt", "r").read()
+    f = open(sys.argv[1] + "/sysinfo.txt", "r").read()
 
 name = f.split("\n")[13][33:]
 
