@@ -37,8 +37,6 @@ core_1 = df["thread_1_core"]
 core_2 = df["thread_2_core"]
 time_nano = df["avg_round_time_nano"]
 
-table = np.empty((32,32))
-
 x_axis = list(set(core_1))
 y_axis = list(set(core_2))
 
@@ -48,6 +46,8 @@ print(y_axis)
 
 size_core_1 = len(x_axis)
 size_core_2 = len(y_axis)
+
+table = np.empty((size_core_1,size_core_2))
 
 zeros = 0
 

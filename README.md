@@ -6,17 +6,12 @@ A test to specifically benchmark the latency of interprocess communication using
 
 ## Installation
 
-To install the project, you can start by cloning the repo and moving into ```tools```.
+To install the project, you can start by cloning the repo and running the cmake configuration bash script in `tools`.
 
 ```shell
 git clone git@github.com:AndreaBaretta/FifoIPCLatency.git
-cd FifoIPCLatency/tools
-```
-
-Now, run the shell script.
-
-```shell
-./configure_builds.sh
+cd FifoIPCLatency
+./tools/configure_builds.sh
 ```
 
 You can now move into either `builds/release` or `builds/debug` and compile the benchmark in either release mode or test mode. Also, make sure that `cmake` is installed.
