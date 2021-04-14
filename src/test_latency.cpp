@@ -189,6 +189,8 @@ int main(int argc, char** argv) {
 		std::string cpu_cmd = "lscpu | head -n 26 > "s + sysinfo_file_name;
 		std::string memamount_cmd = "grep MemTotal /proc/meminfo >> "s + sysinfo_file_name;
 		std::string memspeed_cmd = "sudo dmidecode --type 17| grep Speed >> "s + sysinfo_file_name;
+		std::string os_cmd = "head -n 6 /etc/os-release >> "s + sysinfo_file_name;
+		std::string kernel_cmd = "echo -n \"Kernel version: \" >> "s + sysinfo_file_name + "; uname -r >> "s + sysinfo_file_name;
 
 		if (system(cpu_cmd.c_str()) != 0) {
 			cout << "Couldn't read cpu info (lscpu)" << endl;
@@ -198,6 +200,12 @@ int main(int argc, char** argv) {
 		}
 		if (system(memspeed_cmd.c_str()) != 0) {
 			cout << "Couldn't read mem speed (dmidecode)" << endl;
+		}
+		if (system(os_cmd.c_str()) != 0) {
+			cout << "Couldn't read OS info (/etc/os-release)" << endl;
+		}
+		if (system(kernel_cmd.c_str()) != 0) {
+			cout << "Couldn't read kernel info (uname -r)" << endl;
 		}
 	}
 
