@@ -76,7 +76,6 @@ namespace benchmark {
 				if (!core_to_core.avg) {
 
 					std::cout << "START-T1: Computing avg" << std::endl;
-//					std::cout.flush();
 
 					for (std::size_t i = 0; i < core_to_core.num_tries; ++i) {
 
@@ -86,7 +85,6 @@ namespace benchmark {
 						while (!core_to_core.fifo_2.try_read_message(msg_read)) {}
 
 						if constexpr (test_mode) {
-	//						std::cout << "In test mode" << std::endl;
 							if (msg_read != msg_sent) {
 								std::cout << "Failed at i = " << i << std::endl;
 								std::cout << "Expecting: ";
@@ -105,7 +103,6 @@ namespace benchmark {
 						core_to_core.thread_1_round_time_nano[i] = benchmark::get_thread_time_nano() - t1;
 					}
 					std::cout << " END-T1" << std::endl;
-//					std::cout.flush();
 				} else {
 
 					std::cout << "START-T1: Computing individual message" << std::endl;
@@ -121,7 +118,6 @@ namespace benchmark {
 						while (!core_to_core.fifo_2.try_read_message(msg_read)) {}
 
 						if constexpr (test_mode) {
-	//						std::cout << "In test mode" << std::endl;
 							if (msg_read != msg_sent) {
 								std::cout << "Failed at i = " << i << std::endl;
 								std::cout << "Expecting: ";

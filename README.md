@@ -9,8 +9,8 @@ A test to specifically benchmark the latency of interprocess communication using
 To install the project, you can start by cloning the repo and moving into ```tools```.
 
 ```shell
-git clone git@github.com:AndreaBaretta/InfinityFabricLatency.git
-cd InfinityFabricLatency/tools
+git clone git@github.com:AndreaBaretta/FifoIPCLatency.git
+cd FifoIPCLatency/tools
 ```
 
 Now, run the shell script.
@@ -19,7 +19,7 @@ Now, run the shell script.
 ./configure_builds.sh
 ```
 
-You can now move into either `builds/release` or `builds/debug` and compile the benchmark in either release mode or test mode.
+You can now move into either `builds/release` or `builds/debug` and compile the benchmark in either release mode or test mode. Also, make sure that `cmake` is installed.
 
 ```shell
 cd ../builds/release
@@ -65,7 +65,7 @@ Or, if you wish to test the benchmark by measuring the latency of individual mes
 sudo ./fifo-ipc-latency -i --no-save
 ```
 
-Please note that to make full use of the benchmark, it is necessary to run the executable as sudo and set the CPU governor to 'performance'.
+Please note that to make full use of the benchmark, it is recommended to run the executable as sudo, set the CPU governor to 'performance', and disable CPU C-States in your BIOS.
 
 Lastly, to visualize the data, you can move into the `python` folder.
 
@@ -76,16 +76,24 @@ cd ../../python
 Here, you will find a python script which generates a heatmap of the average latency. To see this, run:
 
 ```shell
-python3 heatmap_avg.py
+python3 heatmap_avg.py <file-path>
 ```
 
-Pyhton 3 is necessary to run this script. Also, please make sure you have the following packages installed:
+If you specify a file path, it will use that particular file. Otherwise, by default, it will use the measurements in `/builds/release/data`.
+
+You can also visualize the distribution of the data gathered from saving the latency of individual measurements by using the following python script:
 
 ```shell
-pip3 install numpy pandas matplotlib
+python3 dist_individual.py <file-path>
 ```
 
-Please note that this script will look for the data, by default, in `/builds/release/data/`. If a different directory has been specified, then use that as the command line argument for the script.
+Once again, you can specify a file path. If you do not, it will look at `builds/release/data/FifoIpcLatency_0_1.csv`.
+
+Pyhton 3 is necessary to run these scripts. Also, please make sure you have the following packages installed:
+
+```shell
+pip3 install numpy pandas matplotlib seaborn
+```
 
 ## Contributions
 

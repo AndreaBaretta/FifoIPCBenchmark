@@ -39,7 +39,6 @@ namespace benchmark {
 	>
 	class fifo_t {
 	public:
-//		static_assert(cache_line_size == 64);
 		constexpr static const std::size_t longs_per_cache_line = cache_line_size/sizeof(long);
 		using cache_line_type = std::array<long, longs_per_cache_line>;
 
@@ -53,10 +52,9 @@ namespace benchmark {
 		};
 
 		using buffer_type = aligned_cache_line_type;
-		using size_type = std::size_t;
 	protected:
-		alignas(cache_line_size) volatile size_type write_index = 0;
-		alignas(cache_line_size) volatile size_type read_index = 0;
+		alignas(cache_line_size) volatile std::size_t write_index = 0;
+		alignas(cache_line_size) volatile std::size_t read_index = 0;
 		alignas(cache_line_size) buffer_type *buffer;
 
 		const std::size_t fifo_size;
@@ -71,8 +69,8 @@ namespace benchmark {
 			delete[] buffer;
 		}
 
-		size_type num_messages_to_read() const {
-			const size_type result = write_index - read_index;
+		std::size_t num_messages_to_read() const {
+			const std::size_t result = write_index - read_index;
 			assert(result <= fifo_size);
 			return result;
 		}
