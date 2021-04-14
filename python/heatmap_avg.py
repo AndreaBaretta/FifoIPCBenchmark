@@ -24,14 +24,19 @@ import sys
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 df = []
+f = []
 if len(sys.argv) == 1:
     print("Using default directory")
     df = pd.read_csv(dir_path + "/../builds/release/data/FifoIpcLatency_avg.csv")
+    f = open(dir_path + "/../builds/release/data/sysinfo.txt", "r").read()
 else:
     print("Used specified directory: " + sys.argv[1])
-    df = pd.read_csv(sys.argv[1])
+    df = pd.read_csv(sys.argv[1] + "/FifoIpcLatency_avg.csv")
+    f = open(dir_path + "/sysinfo.txt", "r").read()
 
-# print(df.to_string())
+name = f.split("\n")[13][33:]
+
+print("Processor: " + name)
 
 core_1 = df["thread_1_core"]
 core_2 = df["thread_2_core"]
@@ -53,9 +58,7 @@ zeros = 0
 
 for x in range(0,size_core_1): #core_1
     for y in range(0,size_core_2): #core_2
-        # print("x=" + str(x) + "  y=" + str(y) + "  i=" + str(size_core_1*(x) + y))
         if (y == x):
-            # table[y][x] = 0
             zeros += 1
         else:
             table[y][x] = time_nano[size_core_1*(x) + y - zeros]/2
@@ -76,7 +79,7 @@ for i in range(len(y_axis)):
 
 fig.colorbar(im, ticks=[np.max(table), np.min(table)])
 
-ax.set_title("One way communication latency (ns)")
+ax.set_title(name + ": Single message latency (ns)")
 fig.tight_layout()
 plt.show()
 
