@@ -26,9 +26,12 @@ along with FifoIPCLatency.  If not, see <https://www.gnu.org/licenses/>.
 #include <optional>
 #include <vector>
 #include <cstring>
-#include <x86intrin.h>
+// #include <x86intrin.h>
 
-#include "memcpy.hpp"
+#if defined(__x86_64__)
+	#include "memcpy.hpp"
+#endif
+
 
 namespace benchmark {
 
