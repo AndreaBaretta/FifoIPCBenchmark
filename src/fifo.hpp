@@ -95,7 +95,9 @@ namespace benchmark {
 			if constexpr (use_memcpy) {
 				std::memcpy(&buffer[buffer_index%fifo_size], msg.data(), message_size*cache_line_size);
 			} else if constexpr (use_avx256) {
+#if defined(__x86_64__)
 				benchmark::copy_data_256<cache_line_size>(&buffer[buffer_index%fifo_size], msg.data(), message_size);
+#endif
 			}
 			write_index = write_index + 1;
 			return true;
@@ -109,7 +111,9 @@ namespace benchmark {
 			if constexpr (use_memcpy) {
 				std::memcpy(msg.data(), &buffer[buffer_index%fifo_size], message_size*cache_line_size);
 			} else if constexpr (use_avx256) {
+#if defined(__x86_64__)
 				benchmark::copy_data_256<cache_line_size>(msg.data(), &buffer[buffer_index%fifo_size], message_size);
+#endif
 			}
 			read_index = read_index + 1;
 			return true;
