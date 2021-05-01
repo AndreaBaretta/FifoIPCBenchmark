@@ -25,7 +25,7 @@ import sys
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-cores = [0,6]
+cores = [0,9]
 
 df = []
 f = []

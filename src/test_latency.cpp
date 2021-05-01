@@ -44,7 +44,7 @@ constexpr const bool test_mode = false;
 constexpr const bool test_mode = true;
 #endif
 
-#ifdef NATIVE
+#if defined(__x86_64__)
 constexpr const bool use_avx256 = true;
 #else
 constexpr const bool use_avx256 = false;
@@ -110,17 +110,27 @@ int main(int argc, char** argv) {
 
 	if (save) { cout << "Data directory = " << data_dir.string() << endl; }
 
-	std::vector<long> dummy(num_tries);
+	std::vector<std::uint8_t> dummy(num_tries);
+	assert((&dummy[num_tries] - &dummy[0])/sizeof(std::uint8_t) == num_tries); //Cost of writing to memory isn't an issue. This was confirmed by trying different memory sizes, long and byte (uint8)
 
 	long t1 = benchmark::get_thread_time_nano(); //Calibration routine
+	long last_t = t1;
 	for (int i = 0; i < num_tries-1; ++i) {
-		dummy[i] = benchmark::get_thread_time_nano() - t1;
+		const long cur_t = benchmark::get_thread_time_nano();
+		dummy[i] = cur_t - last_t;
+		last_t = cur_t;
 	}
 	long t2 = benchmark::get_thread_time_nano();
 
 	double avg_get_time_cost = (static_cast<double>(t2)-static_cast<double>(t1))/num_tries;
 
 	cout << "Average latency from get_time_nano: " << avg_get_time_cost << endl;
+
+	int sum = 0;
+	for (int i = 0; i < num_tries-1; ++i) {
+		sum += dummy[i];
+	}
+	cout << "Average latency from dummy: " << static_cast<double>(sum)/num_tries << endl;
 
 	std::vector<std::string> avg_round_time_nano{};
 	avg_round_time_nano.push_back("thread_1_core,thread_2_core,avg_round_time_nano\n"s);

@@ -53,8 +53,8 @@ namespace benchmark {
 
 		using buffer_type = aligned_cache_line_type;
 	protected:
-		alignas(cache_line_size) volatile std::size_t write_index = 0;
-		alignas(cache_line_size) volatile std::size_t read_index = 0;
+		alignas(cache_line_size) volatile std::size_t write_index;
+		alignas(cache_line_size) volatile std::size_t read_index;
 		alignas(cache_line_size) buffer_type *buffer;
 
 		const std::size_t fifo_size;
