@@ -26,7 +26,9 @@ along with FifoIPCLatency.  If not, see <https://www.gnu.org/licenses/>.
 #include <errno.h>
 #include <time.h>
 #include <cstdlib>
-
+#if defined(__x86_64__)
+	#include <x86intrin.h>
+#endif
 #include "fifo.hpp"
 
 namespace benchmark {
@@ -75,4 +77,15 @@ namespace benchmark {
 		   return result;
 	}
 
+	static inline volatile unsigned long long rdtsc() {
+#if defined(__x86_64__)
+		return __rdtsc();
+#elif defined(__aarch64__)
+		volatile unsigned long long cc;
+  		asm volatile ("mrc p15, 0, %0, c9, c13, 0" : "=r" (cc));
+  		return cc;
+#else
+		static_assert(false);
+#endif
+	} 
 }

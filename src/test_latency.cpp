@@ -59,6 +59,7 @@ using benchmark::core_to_core_t;
 using namespace std::string_literals;
 
 int main(int argc, char** argv) {
+
 	cxxopts::Options options("ThreadToThreadLatency", "Measures the latency of one thread communicating to another over a shared memory FIFO");
 	options.add_options()
 			("n,numtries", "Number of iterations of the test", cxxopts::value<int>()->default_value("1000000"))
@@ -110,30 +111,10 @@ int main(int argc, char** argv) {
 
 	if (save) { cout << "Data directory = " << data_dir.string() << endl; }
 
-	std::vector<std::uint8_t> dummy(num_tries);
-	assert((&dummy[num_tries] - &dummy[0])/sizeof(std::uint8_t) == num_tries); //Cost of writing to memory isn't an issue. This was confirmed by trying different memory sizes, long and byte (uint8)
-
-	long t1 = benchmark::get_thread_time_nano(); //Calibration routine
-	long last_t = t1;
-	for (int i = 0; i < num_tries-1; ++i) {
-		const long cur_t = benchmark::get_thread_time_nano();
-		dummy[i] = cur_t - last_t;
-		last_t = cur_t;
-	}
-	long t2 = benchmark::get_thread_time_nano();
-
-	double avg_get_time_cost = (static_cast<double>(t2)-static_cast<double>(t1))/num_tries;
-
-	cout << "Average latency from get_time_nano: " << avg_get_time_cost << endl;
-
-	int sum = 0;
-	for (int i = 0; i < num_tries-1; ++i) {
-		sum += dummy[i];
-	}
-	cout << "Average latency from dummy: " << static_cast<double>(sum)/num_tries << endl;
-
 	std::vector<std::string> avg_round_time_nano{};
+	std::vector<std::string> period_and_freq{};
 	avg_round_time_nano.push_back("thread_1_core,thread_2_core,avg_round_time_nano\n"s);
+	period_and_freq.push_back("thread_1_core,thread_2_core,period_1,period_2\n"s);
 
 	int max_cores = sysconf(_SC_NPROCESSORS_ONLN);
 	cout << "Number of cores detected: " << max_cores << endl;
@@ -151,16 +132,23 @@ int main(int argc, char** argv) {
 			thread_1.join();
 			thread_2.join();
 
-			if (individual_message && save) {
+			if (individual_message && save) {				
+				long double period_1 = ctc.thread_1.tot_time/static_cast<long double>(ctc.thread_1.tot_cycles);
+				long double period_2 = ctc.thread_2.tot_time/static_cast<long double>(ctc.thread_2.tot_cycles);
+
+				cout << "Period_1: " << period_1 << " round trip time: " << ctc.thread_1.tot_time << " cycles: " << ctc.thread_1.tot_cycles << endl;
+				cout << "Period_2: " << period_2 << endl;
+
 				std::ofstream data;
 				std::filesystem::path fileName = data_dir / (std::string("FifoIpcLatency_") + std::to_string(core_1) + std::string("_") + std::to_string(core_2) + std::string(".csv"));
 				cout << "Data file: " << fileName << endl;
 				data.open(fileName, std::ios_base::trunc);
 				data << "attempt,thread_1_round_trip_nano,thread_2_round_trip_nano\n";
 				for (int i = 0; i < num_tries; ++i) {
-					data << i << "," << ctc.thread_1_round_time_nano[i] - avg_get_time_cost << "," << ctc.thread_2_round_time_nano[i] - avg_get_time_cost << "\n";
+					data << i << "," << ctc.thread_1_round_time_cycles[i]/**period_1*/ << "," << ctc.thread_2_round_time_cycles[i]/**period_2*/ << "\n";
 				}
 				data.close();
+				period_and_freq.push_back(std::to_string(core_1) + ","s + std::to_string(core_2) + ","s + std::to_string(period_1) + ","s + std::to_string(period_2) + "\n"s);
 				cout << "Saved data -i" << endl;
 			} else if (save) {
 				std::string temp = std::to_string(core_1) + ","s + std::to_string(core_2) + ","s + std::to_string(ctc.thread_1.avg_latency) + "\n"s;
@@ -180,6 +168,18 @@ int main(int argc, char** argv) {
 		if (specified_cores.size() >= 1) {
 			break;
 		}
+	}
+
+	if (individual_message && save) {
+		std::ofstream data;
+		std::filesystem::path period_file_name = data_dir / std::string("FifoIpcLatency_period.csv");
+		cout << "Period data file: " << period_file_name << endl;
+		data.open(period_file_name, std::ios_base::trunc);
+		for (std::size_t i = 0; i < period_and_freq.size(); ++i) {
+			data << period_and_freq[i];
+		}
+		data.close();
+		cout << "Saved period data" << endl;
 	}
 
 	if (!individual_message && save) {
