@@ -31,7 +31,7 @@ plt.rcParams.update({
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-cores = [0,8]
+cores = [0,1]
 
 df = []
 df2 = []
@@ -127,7 +127,7 @@ text = ""
 text += f"\\textbf{{Thread 1 statistics:}}\n"
 text += f"Avg. TSC freq.: {freq_1:.3f} GHz\n"
 text += f"Avg. TSC cycle time: {period_1} ns\n"
-text += f"Mean: {mean} cycles = {mean*period_1:.1f} ns\n"
+text += f"Mean: {mean:.1f} cycles = {mean*period_1:.1f} ns\n"
 text += f"q(0.50): {quantiles[0.5]} cycles = {quantiles[0.5]*period_1:.1f} ns\n"
 text += f"q(0.90): {quantiles[0.90]} cycles = {quantiles[0.90]*period_1:.1f} ns\n"
 text += f"q(0.99): {quantiles[0.99]} cycles = {quantiles[0.99]*period_1:.1f} ns\n"
@@ -135,7 +135,7 @@ text += f"q(0.99): {quantiles[0.99]} cycles = {quantiles[0.99]*period_1:.1f} ns\
 text += f"\\textbf{{Thread 2 statistics:}}\n"
 text += f"Avg. TSC freq.: {freq_2:.3f} GHz\n"
 text += f"Avg. TSC cycle time: {period_2} ns\n"
-text += f"Mean: {mean2} cycles = {mean2*period_2:.1f} ns\n"
+text += f"Mean: {mean2:.1f} cycles = {mean2*period_2:.1f} ns\n"
 text += f"q(0.50): {quantiles2[0.5]} cycles = {quantiles2[0.5]*period_2:.1f} ns\n"
 text += f"q(0.90): {quantiles2[0.90]} cycles = {quantiles2[0.90]*period_2:.1f} ns\n"
 text += f"q(0.99): {quantiles2[0.99]} cycles = {quantiles2[0.99]*period_2:.1f} ns"
