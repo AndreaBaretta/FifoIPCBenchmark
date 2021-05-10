@@ -82,10 +82,21 @@ namespace benchmark {
 		return __rdtsc();
 #elif defined(__aarch64__)
 		volatile unsigned long long cc;
-  		asm volatile ("mrc p15, 0, %0, c9, c13, 0" : "=r" (cc));
+  		asm volatile("mrs %0, PMCCNTR_EL0" : "=r" (cc));
   		return cc;
 #else
 		static_assert(false);
 #endif
-	} 
+	}
+
+	static inline void init_rdtsc() {
+#if defined(__aarch64__)
+		// program the performance-counter control-register:
+		asm volatile("msr pmcr_el0, %0" : : "r" (17));
+		//enable all counters
+		asm volatile("msr PMCNTENSET_EL0, %0" : : "r" (0x8000000f));
+		//clear the overflow 
+		asm volatile("msr PMOVSCLR_EL0, %0" : : "r" (0x8000000f));
+#endif
+	}
 }

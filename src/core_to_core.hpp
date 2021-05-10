@@ -69,6 +69,7 @@ namespace benchmark {
 			thread_1_t(thread_1_t&&) = delete;
 
 			int operator()() {
+				benchmark::init_rdtsc();
 				benchmark::pin_this_thread_to_core(core_to_core.core_1);
 				std::vector<aligned_cache_line_type> msg_sent{core_to_core.message_size};
 				std::vector<aligned_cache_line_type> msg_read{core_to_core.message_size};
@@ -166,6 +167,7 @@ namespace benchmark {
 			thread_2_t(thread_1_t&&) = delete;
 
 			int operator()() {
+				benchmark::init_rdtsc();
 				benchmark::pin_this_thread_to_core(core_to_core.core_2);
 				std::vector<aligned_cache_line_type> msg_read{core_to_core.message_size};
 
