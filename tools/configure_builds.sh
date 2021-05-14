@@ -19,13 +19,22 @@
 
 set -e -o pipefail
 
-mkdir -p builds/debug
-mkdir -p builds/release
+function echodo () {
+        set -e -o pipefail
+        echo "[BEGIN] $@" >&2
+        "$@"
+        echo "[END  ] $@" >&2
+}
 
-pushd builds/debug
-cmake -DCMAKE_BUILD_TYPE=Debug ../..
-popd
+export CC=gcc-10
+export CXX=g++-10
+echodo mkdir -p builds/debug
+echodo mkdir -p builds/release
 
-pushd builds/release
-cmake -DCMAKE_BUILD_TYPE=Release ../..
-popd
+echodo pushd builds/debug
+echodo cmake -DCMAKE_BUILD_TYPE=Debug ../..
+echodo popd
+
+echodo pushd builds/release
+echodo cmake -DCMAKE_BUILD_TYPE=Release ../..
+echodo popd
