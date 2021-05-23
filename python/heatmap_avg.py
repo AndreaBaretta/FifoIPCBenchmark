@@ -21,6 +21,10 @@ import os
 import matplotlib.pyplot as plt
 import sys
 
+plt.rcParams.update({
+    "text.usetex": True
+})
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 df = []
@@ -77,7 +81,7 @@ for i in range(len(y_axis)):
         text = ax.text(j, i, int(table[i, j]),
             ha="center", va="center", color="w")
 
-fig.colorbar(im, ticks=[np.max(table), np.min(table)])
+# fig.colorbar(im, ticks=[np.max(table), np.min(table)])
 
 ax.set_title(name + ": Single message latency (ns)")
 fig.tight_layout()

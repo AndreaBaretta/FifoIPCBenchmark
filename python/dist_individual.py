@@ -31,7 +31,7 @@ plt.rcParams.update({
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-cores = [0,1]
+cores = [0,79]
 
 df = []
 df2 = []
