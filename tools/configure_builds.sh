@@ -26,8 +26,9 @@ function echodo () {
         echo "[END  ] $@" >&2
 }
 
-export CC=gcc-10
-export CXX=g++-10
+
+export CC=clang-11
+export CXX=clang++-11
 echodo mkdir -p builds/debug
 echodo mkdir -p builds/release
 

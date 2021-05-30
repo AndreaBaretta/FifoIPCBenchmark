@@ -21,6 +21,7 @@ along with FifoIPCLatency.  If not, see <https://www.gnu.org/licenses/>.
 
 #pragma once
 #include <sched.h>
+#include <iostream>
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>
@@ -77,7 +78,7 @@ namespace benchmark {
 		   return result;
 	}
 
-	static inline volatile unsigned long long rdtsc() {
+	static inline unsigned long long rdtsc() {
 #if defined(__x86_64__)
 		return __rdtsc();
 #elif defined(__aarch64__)

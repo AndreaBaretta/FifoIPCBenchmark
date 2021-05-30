@@ -53,8 +53,8 @@ namespace benchmark {
 		std::vector<long long> thread_1_round_time_cycles;
 		std::vector<long long> thread_2_round_time_cycles;
 
-		using cache_line_type = fifo_t<cache_line_size, use_memcpy, use_avx256>::cache_line_type;
-		using aligned_cache_line_type = fifo_t<cache_line_size, use_memcpy, use_avx256>::aligned_cache_line_type;
+		using cache_line_type = typename fifo_t<cache_line_size, use_memcpy, use_avx256>::cache_line_type;
+		using aligned_cache_line_type = typename fifo_t<cache_line_size, use_memcpy, use_avx256>::aligned_cache_line_type;
 
 		class thread_1_t {
 			core_to_core_t& core_to_core;
