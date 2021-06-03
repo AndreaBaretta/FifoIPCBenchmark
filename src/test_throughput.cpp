@@ -102,6 +102,7 @@ void run_test(std::vector<std::tuple<int, int>>& core_pairs, const int num_tries
         }
         data << "\n"s;
     }
+    for (auto* ptr : tts) { delete ptr; };
     // std::ofstream data;
     // data.open(file, std::ios_base::trunc); 
 }
@@ -292,6 +293,7 @@ int main(int argc, char** argv) {
         cout << "Beginning test #" << t << endl;
         std::vector<std::thread> threads{};
         run_test(tests[t], num_tries, fifo_size, message_size, !individual, threads, data_dir, data, test_name);
+        data.flush
     }
     data.close();
 
