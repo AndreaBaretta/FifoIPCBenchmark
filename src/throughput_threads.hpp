@@ -62,11 +62,11 @@ namespace benchmark {
 			throughput_threads_t& throughput_threads;
 			std::thread thread_1;
 		public:
-			long avg_latency;
+			double avg_throughput;
 			long tot_time;
 			long long tot_cycles;
 
-			thread_1_t(throughput_threads_t& throughput_threads) : throughput_threads(throughput_threads), avg_latency(0), tot_time(0), tot_cycles(0) {
+			thread_1_t(throughput_threads_t& throughput_threads) : throughput_threads(throughput_threads), avg_throughput(0), tot_time(0), tot_cycles(0) {
 			};
 			thread_1_t(const thread_1_t&) = delete;
 			thread_1_t(thread_1_t&&) = delete;
@@ -114,8 +114,8 @@ namespace benchmark {
 						while (!throughput_threads.fifo_1.try_write_message(msg_sent)) {}
 					}
 					tot_time = benchmark::get_thread_time_nano() - start;
-					avg_latency = tot_time/static_cast<long>(throughput_threads.num_tries);
-					std::cout << " END-T1: avg single message latency: " << avg_latency << " ns" << std::endl;
+					avg_throughput = throughput_threads.num_tries/(static_cast<double>(tot_time)/1000000000);
+					std::cout << " END-T1: avg throughput: " << avg_throughput << " messages/s" << "  tot_time: " << tot_time << std::endl;
 					std::cout.flush();
 				}
 
