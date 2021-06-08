@@ -1,6 +1,4 @@
-# FifoIPCLatency
-
-<!-- [![GitHub license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)](http://goldsborough.mit-license.org) -->
+# FifoIPCBenchmark
 
 A test to specifically benchmark the latency of interprocess communication using a shared-memory FIFO object. 
 
@@ -9,8 +7,8 @@ A test to specifically benchmark the latency of interprocess communication using
 To install the project, you can start by cloning the repo and running the cmake configuration bash script in `tools`.
 
 ```shell
-git clone git@github.com:AndreaBaretta/FifoIPCLatency.git
-cd FifoIPCLatency
+git clone git@github.com:AndreaBaretta/FifoIPCBenchmark.git
+cd FifoIPCBenchmark
 ./tools/configure_builds.sh
 ```
 
@@ -21,22 +19,25 @@ cd ../builds/release
 cmake --build .
 ```
 
-You can now run the executable as sudo.
+You can now run the executables as sudo.
 
 ```shell
 sudo ./fifo-ipc-latency
+sudo ./fifo-ipc-throughput --intra-ccx
 ```
 
 ## Usage
 
-`g++-10` is recommended for compilation, and it the compiler used to obtain the sample data:
+### Latency measurements
+
+`clang-11` is recommended for compilation, and it is the compiler used to obtain the sample data:
 ```shell
-sudo apt-get install g++-10
+sudo apt-get install clang-11
 ```
 
 The c++ standard used for compilation is c++20.
 
-Once you have compiled the benchmark as previously described and have the exeutable, it can take several command-line arguments:
+Once you have compiled the benchmark as previously described and have the executable, it can take several command-line arguments:
 
 * `-n, --numtries arg`: Number of iterations of the test (default: 1000000)
 * `-i, --individual-message`: Save latency data on individual messages
@@ -90,31 +91,84 @@ Pyhton 3 is necessary to run these scripts. Also, please make sure you have the 
 pip3 install numpy pandas matplotlib seaborn
 ```
 
+### Throughput measurements
+
+`clang-11` is once again recommended for compilation, and it is the compiler used to obtain the sample data. The c++ standard used for compilation is stil  c++20.
+
+```shell
+sudo apt-get install clang-11
+```
+
+The executable `fifo-ipc-throughput` can take multiple command-line arguments:
+
+* `--ccx arg`: Number of CCXs per socket (default: 1)
+* `--sockets arg`: Number of sockets in the system
+* `--intra-core`: Tests the throughput of message across two threads in the same physical core
+* `--intra-ccx`: Tests the throughput of messages across pairs of cores in the same CCX
+* `--intra-ccx-all`: Tests the throughput of messages across all pairs of cores in one CCX on all CCXs at the same time
+* `--inter-ccx`: Tests communication across all pairs of CCXs in one socket
+* `--inter-socket`: Tests the throughput of messages across all pairs of cores between sockets
+* `--mt`: Perform this test with simultaneous multithreading
+* `-b, --buffer-size arg`: Size of the buffer in the shared FIFO in number of messages (default: 8)
+* `-m, --message-size arg`: Size of the message sent to FIFO in number of cache lines (default: 1)
+* `-n, --numtries arg`: Number of iterations of the test (default: 1000000)
+* `-d, --data-dir arg`: Directory for gathered data. If not specified, uses present working directory
+
+##### Note: All of this information is displayed when running the program with `-h` or `--help`.
+
+For example, you can measure the throughput of sending 1,0000,000 messages, with a buffer of 100 cache lines, across CCXs with the following command:
+
+```shell
+sudo ./fifo-ipc-throughput -n 10000000 -b 100 --inter-ccx
+```
+
+Or, if you wish to test the throughput of intra-CCX communication across all CCXs simultaneously with a custom data directory, you can run:
+
+```shell
+sudo ./fifo-ipc-throughput -d /home/andrea/My/Data/Directory --intra-ccx-all 
+```
+
+Once again, to make full use of the benchmark, it is recommended to run the executable as sudo, set the CPU governor to 'performance', and disable CPU C-States in your BIOS.
+
+Lastly, to visualize the data, you can move into the `python` folder.
+
+```shell
+cd ../../python
+```
+
+Here, you will find a python script which generates a box and whisker plot of the distribution of throughpuyt measurements for all tests. To see this, run:
+
+```shell
+python3 throughput_plot.py <data-dir>
+```
+
+If you specify a file path, it will use that particular file. Otherwise, by default, it will use the measurements in `/builds/release/data`.
+
 ## Contributions
 
-Contributions are appreciated, but please keep in mind that this benchmark specifically measures the latency of communication using shared memory FIFOs.
+Contributions are appreciated, but please keep in mind that this benchmark specifically measures the latency and throughput of communication using shared memory FIFOs.
 
-Just open an issue or send a pull request.
+Feel free to open an issue or send a pull request.
 
 <!-- ## [License](http://goldsborough.mit-license.org) -->
 ## License
 
 This project is released under the [GNU General Public License](https://www.gnu.org/licenses/gpl-3.0.en.html). For more information, see the COPYING file.
 
-    This file is part of FifoIPCLatency.
+    This file is part of FifoIPCBenchmark.
 
-    FifoIPCLatency is free software: you can redistribute it and/or modify
+    FifoIPCBenchmark is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    FifoIPCLatency is distributed in the hope that it will be useful,
+    FifoIPCBenchmark is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with FifoIPCLatency.  If not, see <https://www.gnu.org/licenses/>.
+    along with FifoIPCBenchmark.  If not, see <https://www.gnu.org/licenses/>.
 
 ## Authors
 

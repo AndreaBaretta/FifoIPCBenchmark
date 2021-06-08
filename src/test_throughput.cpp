@@ -2,20 +2,20 @@
 
 Copyright © 2021 Andrea Baretta
 
-This file is part of FifoIPCLatency.
+This file is part of FifoIPCBenchmark.
 
-FifoIPCLatency is free software: you can redistribute it and/or modify
+FifoIPCBenchmark is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
-FifoIPCLatency is distributed in the hope that it will be useful,
+FifoIPCBenchmark is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with FifoIPCLatency.  If not, see <https://www.gnu.org/licenses/>.
+along with FifoIPCBenchmark. If not, see <https://www.gnu.org/licenses/>.
 
 */
 
@@ -115,10 +115,11 @@ int main(int argc, char** argv) {
         ("intra-ccx-all", "Tests the throughput of messages across all pairs of cores in one CCX on all CCXs at the same time")
         ("inter-ccx", "Tests communication across all pairs of CCXs in one socket")
         ("inter-socket", "Tests the throughput of messages across all pairs of cores between sockets")
-        ("mt", "Perform this test with multithreading")
+        ("mt", "Perform this test with simultaneous multithreading")
         ("b,buffer-size", "Size of the buffer in the shared FIFO in number of messages", cxxopts::value<std::size_t>()->default_value("8"))
         ("m,message-size", "Size of the message sent to FIFO in number of cache lines", cxxopts::value<std::size_t>()->default_value("1"))
         ("n,numtries", "Number of iterations of the test", cxxopts::value<int>()->default_value("1000000"))
+        ("d,data-dir", "Directory for gathered data. If not specified, uses present working directory", cxxopts::value<std::string>()->default_value(std::string("")))
         ("h,help", "Print usage");
 
 	auto result = options.parse(argc, argv);
@@ -143,6 +144,7 @@ int main(int argc, char** argv) {
     const std::size_t fifo_size = result["buffer-size"].as<std::size_t>();
     const std::size_t message_size = result["message-size"].as<std::size_t>();
     const int num_tries = result["numtries"].as<int>();
+    std::string usr_data_dir = result["data-dir"].as<std::string>();
 
     const bool mt = result["mt"].as<bool>();
 
@@ -153,14 +155,18 @@ int main(int argc, char** argv) {
     const int ccx_size = max_cores / (num_ccx_per_socket*num_sockets);
     const int socket_size = max_cores / num_sockets;
 
-
-
-    if (max_cores % num_sockets != 0 || max_cores % (num_ccx_per_socket*num_sockets) != 0) {	std::filesystem::path data_dir = std::filesystem::current_path() / "data";
-    std::filesystem::create_directory(data_dir);
-    }
-
     if (num_sockets % 2 != 0 && num_sockets != 1) {
         cout << "Odd number of sockets" << endl;
+        exit(0);
+    }
+
+    if (num_ccx_per_socket % 2 != 0) {
+        cout << "Odd number of CCXs per socket" << endl;
+        exit(0);
+    }
+
+    if (max_cores % (num_ccx_per_socket*num_sockets) != 0) {
+        cout << "Odd number of cores per CCX" << endl;
         exit(0);
     }
 
@@ -265,7 +271,10 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::filesystem::path data_dir = std::filesystem::current_path() / "data";
+	std::filesystem::path data_dir =
+			usr_data_dir.empty()
+			? std::filesystem::current_path() / "data"
+			: std::filesystem::path(std::string(usr_data_dir));
     std::filesystem::create_directory(data_dir);
     std::string test_name;
     if (intra_core) { test_name = "intra_core"s; }
