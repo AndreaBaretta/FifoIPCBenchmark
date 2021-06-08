@@ -71,7 +71,7 @@ std::string status_of_core(std::vector<std::tuple<int, int>>& core_pairs, int co
     return "-"s;
 }
 
-void run_test(std::vector<std::tuple<int, int>>& core_pairs, const int num_tries, const std::size_t fifo_size, const std::size_t message_size, const bool avg, 
+void run_test(std::vector<std::tuple<int, int>>& core_pairs, const int num_tries, const std::size_t fifo_size, const std::size_t message_size, 
               std::vector<std::thread>& threads, std::filesystem::path file, std::ofstream& data, std::string test_name) {
     const int num_pairs = core_pairs.size();
     std::vector<throughput_threads_t<64, test_mode, use_memcpy, use_avx256>*> tts{};
@@ -84,7 +84,7 @@ void run_test(std::vector<std::tuple<int, int>>& core_pairs, const int num_tries
         const int core_1 = std::get<0>(core_pairs[i]);
         const int core_2 = std::get<1>(core_pairs[i]);
         cout << "Cores: " << core_1 << ", " << core_2 << endl;
-        auto* tt = new throughput_threads_t<64, test_mode, use_memcpy, use_avx256>{core_1, core_2, num_tries, fifo_size, message_size, avg, start};
+        auto* tt = new throughput_threads_t<64, test_mode, use_memcpy, use_avx256>{core_1, core_2, num_tries, fifo_size, message_size, start};
         threads.emplace_back([&]{tt->thread_1();});
         threads.emplace_back([&]{tt->thread_2();});
         cout << "Placed thread: i=" << i << endl;
@@ -103,8 +103,6 @@ void run_test(std::vector<std::tuple<int, int>>& core_pairs, const int num_tries
         data << "\n"s;
     }
     for (auto* ptr : tts) { delete ptr; };
-    // std::ofstream data;
-    // data.open(file, std::ios_base::trunc); 
 }
 
 int main(int argc, char** argv) {
@@ -121,7 +119,6 @@ int main(int argc, char** argv) {
         ("b,buffer-size", "Size of the buffer in the shared FIFO in number of messages", cxxopts::value<std::size_t>()->default_value("8"))
         ("m,message-size", "Size of the message sent to FIFO in number of cache lines", cxxopts::value<std::size_t>()->default_value("1"))
         ("n,numtries", "Number of iterations of the test", cxxopts::value<int>()->default_value("1000000"))
-        ("i,individual-message", "Save latency data on individual messages")
         ("h,help", "Print usage");
 
 	auto result = options.parse(argc, argv);
@@ -146,12 +143,9 @@ int main(int argc, char** argv) {
     const std::size_t fifo_size = result["buffer-size"].as<std::size_t>();
     const std::size_t message_size = result["message-size"].as<std::size_t>();
     const int num_tries = result["numtries"].as<int>();
-    const bool individual = result["individual-message"].as<bool>();
 
     const bool mt = result["mt"].as<bool>();
 
-	// int max_cores = sysconf(_SC_NPROCESSORS_ONLN)/2;
-    // int max_cores = 64;
 	cout << "Number of cores detected: " << max_cores << endl;
     cout << "Number of CCXs per socket: " << num_ccx_per_socket << endl;
     cout << "Number of sockets: " << num_sockets << endl;
@@ -292,7 +286,7 @@ int main(int argc, char** argv) {
     for (int t = 0; t < tests.size(); ++t) {
         cout << "Beginning test #" << t << endl;
         std::vector<std::thread> threads{};
-        run_test(tests[t], num_tries, fifo_size, message_size, !individual, threads, data_dir, data, test_name);
+        run_test(tests[t], num_tries, fifo_size, message_size, threads, data_dir, data, test_name);
     }
     data.close();
 
