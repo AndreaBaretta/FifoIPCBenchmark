@@ -15,7 +15,7 @@ cd FifoIPCBenchmark
 You can now move into either `builds/release` or `builds/debug` and compile the benchmark in either release mode or test mode. Also, make sure that `cmake` is installed.
 
 ```shell
-cd ../builds/release
+cd ./builds/release
 cmake --build .
 ```
 
