@@ -156,17 +156,17 @@ int main(int argc, char** argv) {
     const int socket_size = max_cores / num_sockets;
 
     if (num_sockets % 2 != 0 && num_sockets != 1) {
-        cout << "Odd number of sockets" << endl;
+        cout << "ERROR: Odd number of sockets" << endl;
         exit(0);
     }
 
-    if (num_ccx_per_socket % 2 != 0) {
-        cout << "Odd number of CCXs per socket" << endl;
+    if (num_ccx_per_socket % 2 != 0 && inter_ccx) {
+        cout << "ERROR: Running inter-CCX test with odd number of CCXs per socket" << endl;
         exit(0);
     }
 
     if (max_cores % (num_ccx_per_socket*num_sockets) != 0) {
-        cout << "Odd number of cores per CCX" << endl;
+        cout << "ERROR: Odd number of cores per CCX" << endl;
         exit(0);
     }
 
