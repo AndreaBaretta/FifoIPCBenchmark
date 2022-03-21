@@ -30,9 +30,9 @@ sudo ./fifo-ipc-throughput --intra-ccx
 
 ### Latency measurements
 
-`clang-11` is recommended for compilation, and it is the compiler used to obtain the sample data:
+`clang-13` is recommended for compilation, and it is the compiler used to obtain the sample data:
 ```shell
-sudo apt-get install clang-11
+sudo apt-get install clang-13
 ```
 
 The c++ standard used for compilation is c++20.
@@ -93,10 +93,10 @@ pip3 install numpy pandas matplotlib seaborn
 
 ### Throughput measurements
 
-`clang-11` is once again recommended for compilation, and it is the compiler used to obtain the sample data. The c++ standard used for compilation is stil  c++20.
+`clang-13` is once again recommended for compilation, and it is the compiler used to obtain the sample data. The c++ standard used for compilation is stil  c++20.
 
 ```shell
-sudo apt-get install clang-11
+sudo apt-get install clang-13
 ```
 
 The executable `fifo-ipc-throughput` can take multiple command-line arguments:
