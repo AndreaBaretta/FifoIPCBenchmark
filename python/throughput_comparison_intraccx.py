@@ -28,6 +28,7 @@ plt.rcParams.update({
 colors = ['ro', 'bo', 'go', 'co', 'mo', 'yo']
 
 df_intraccx = []
+df_intraccx_all = []
 names = []
 i_intra_ccx_set = set()
 individual_labels = []
@@ -42,6 +43,7 @@ for i in range(0, len(os.listdir(sys.argv[1]))):
     file = sys.argv[1] + "/" + os.listdir(sys.argv[1])[i] + "/data/intra_ccx.csv"
     if (os.path.isfile(file)):
         df_intraccx.append(pd.read_csv(file))
+        df_intraccx_all.append(pd.read_csv(sys.argv[1] + "/" + os.listdir(sys.argv[1])[i] + "/data/intra_ccx_all.csv"))
         f = open(sys.argv[1] + "/" + os.listdir(sys.argv[1])[i] + "/data/sysinfo.txt", "r").read()
         names.append(f.split("\n")[13][33:])
         print("Detected CPU: " + names[-1])
@@ -63,7 +65,6 @@ for i in range(0, len(os.listdir(sys.argv[1]))):
 
         cpu_labels.append(str(num_intra_ccx))
         i_intra_ccx_set.add(num_intra_ccx)
-        individual_labels.append(cpu_labels)
         indeces.append(num_intra_ccx)
 
         graphs_intraccx.append([])
@@ -78,6 +79,19 @@ for i in range(0, len(os.listdir(sys.argv[1]))):
         print("graphs_intraccx[-1]:", graphs_intraccx[-1])
 
         print("num_intra_ccx", num_intra_ccx)
+
+        print("df_intraccx_all['num_pairs'][0]", df_intraccx_all[-1]['num_pairs'][0])
+        num_intra_ccx_all = int(df_intraccx_all[-1]['num_pairs'][0])
+        cpu_labels.append(str(num_intra_ccx_all))
+        i_intra_ccx_set.add(num_intra_ccx_all)
+
+        graphs_intraccx[-1].append(np.average(df_intraccx_all[-1]['result']))
+        graphs_tot_intraccx[-1].append(num_intra_ccx_all*np.average(df_intraccx_all[-1]['result']))
+
+        individual_labels.append(cpu_labels)
+
+
+
 
 i_intra_ccx = np.sort(list(i_intra_ccx_set))
 for i in i_intra_ccx:
