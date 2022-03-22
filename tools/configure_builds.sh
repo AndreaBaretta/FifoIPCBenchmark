@@ -27,8 +27,8 @@ function echodo () {
 }
 
 
-export CC=clang-13
-export CXX=clang++-13
+export CC=clang-12
+export CXX=clang++-12
 echodo mkdir -p builds/debug
 echodo mkdir -p builds/release
 
