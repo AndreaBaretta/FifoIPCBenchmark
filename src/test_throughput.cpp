@@ -276,6 +276,32 @@ int main(int argc, char** argv) {
 			? std::filesystem::current_path() / "data"
 			: std::filesystem::path(std::string(usr_data_dir));
     std::filesystem::create_directory(data_dir);
+
+    std::string sysinfo_file_name = data_dir.string() + "/sysinfo.txt"s;
+	if (!std::filesystem::exists(sysinfo_file_name)) {
+		std::string cpu_cmd = "lscpu | head -n 26 > "s + sysinfo_file_name;
+		std::string memamount_cmd = "grep MemTotal /proc/meminfo >> "s + sysinfo_file_name;
+		std::string memspeed_cmd = "sudo dmidecode --type 17| grep Speed >> "s + sysinfo_file_name;
+		std::string os_cmd = "head -n 6 /etc/os-release >> "s + sysinfo_file_name;
+		std::string kernel_cmd = "echo -n \"Kernel version: \" >> "s + sysinfo_file_name + "; uname -r >> "s + sysinfo_file_name;
+
+		if (system(cpu_cmd.c_str()) != 0) {
+			cout << "Couldn't read cpu info (lscpu)" << endl;
+		}
+		if (system(memamount_cmd.c_str()) != 0) {
+			cout << "Couldn't read mem amount (/proc/meminfo)" << endl;
+		}
+		if (system(memspeed_cmd.c_str()) != 0) {
+			cout << "Couldn't read mem speed (dmidecode)" << endl;
+		}
+		if (system(os_cmd.c_str()) != 0) {
+			cout << "Couldn't read OS info (/etc/os-release)" << endl;
+		}
+		if (system(kernel_cmd.c_str()) != 0) {
+			cout << "Couldn't read kernel info (uname -r)" << endl;
+		}
+	}
+
     std::string test_name;
     if (intra_core) { test_name = "intra_core"s; }
     else if (intra_ccx) { test_name = "intra_ccx"s; }
