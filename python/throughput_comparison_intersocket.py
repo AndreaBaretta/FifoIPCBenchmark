@@ -22,10 +22,11 @@ import matplotlib.pyplot as plt
 import sys
 
 plt.rcParams.update({
-    "text.usetex": True
+    "text.usetex": True,
+    "font.size": 13
 })
 
-colors = ['ro', 'bo', 'go', 'co', 'mo', 'yo']
+colors = ['ro', 'bo', 'co', 'go', 'mo', 'yo']
 
 df_intersocket = []
 names = []

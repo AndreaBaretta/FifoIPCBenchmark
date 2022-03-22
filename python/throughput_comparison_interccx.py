@@ -22,10 +22,11 @@ import matplotlib.pyplot as plt
 import sys
 
 plt.rcParams.update({
-    "text.usetex": True
+    "text.usetex": True,
+    "font.size": 13
 })
 
-colors = ['bo', 'go', 'co', 'mo', 'yo', 'ro']
+colors = ['go', 'co', 'mo', 'yo', 'ro', 'bo']
 
 df_interccx = []
 names = []
