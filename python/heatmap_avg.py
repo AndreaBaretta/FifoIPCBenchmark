@@ -38,7 +38,7 @@ else:
     df = pd.read_csv(sys.argv[1] + "/FifoIpcLatency_avg.csv")
     f = open(sys.argv[1] + "/sysinfo.txt", "r").read()
 
-name = f.split("\n")[13][33:]
+name = f.split("\n")[7][33:]
 
 print("Processor: " + name)
 

@@ -23,7 +23,7 @@ import sys
 
 plt.rcParams.update({
     "text.usetex": True,
-    "font.size": 13
+    "font.size": 15
 })
 
 colors = ['ro', 'bo', 'go', 'co', 'mo', 'yo']
